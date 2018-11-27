@@ -14,7 +14,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -34,8 +33,8 @@ public class addshop extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addshop);
         databaseReference = FirebaseDatabase.getInstance().getReference().child("shops").push();
-        shopname = (EditText) findViewById(R.id.shopname);
-        rating = (EditText) findViewById(R.id.rating);
+        shopname = (EditText) findViewById(R.id.shopcount);
+        rating = (EditText) findViewById(R.id.rating2);
         timing = (EditText) findViewById(R.id.timing);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         listener = new LocationListener() {

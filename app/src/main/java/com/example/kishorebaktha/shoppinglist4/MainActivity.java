@@ -52,7 +52,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private static int SIGN_IN_CODE=1;
-    RelativeLayout activity_main;
+    LinearLayout activity_main;
     int year_x,month_x,day_x;
     static final int dialog_id=0;
     static final int dialog_id2=1;
@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         recyclerView = findViewById(R.id.list);
-       // activity_main=(RelativeLayout)findViewById(R.id.activity_main);
+        activity_main=(LinearLayout) findViewById(R.id.activity_main);
         check();
     }
     public void check()
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
             linearLayoutManager = new LinearLayoutManager(this);
             recyclerView.setLayoutManager(linearLayoutManager);
             recyclerView.setHasFixedSize(true);
-            displaylist();
+           // displaylist();
             final Calendar cal;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 cal = Calendar.getInstance();
@@ -90,6 +90,90 @@ public class MainActivity extends AppCompatActivity {
                 month_x=cal.get(java.util.Calendar.MONTH);
                 day_x=cal.get(java.util.Calendar.DAY_OF_MONTH);
             }
+            Query query = FirebaseDatabase.getInstance()
+                    .getReference()
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
+
+            FirebaseRecyclerOptions<ListItem> options =
+                    new FirebaseRecyclerOptions.Builder<ListItem>()
+                            .setQuery(query, new SnapshotParser<ListItem>() {
+                                @NonNull
+                                @Override
+                                public ListItem parseSnapshot(@NonNull DataSnapshot snapshot) {
+                                    return new ListItem(snapshot.child("item").getValue().toString(),
+                                            snapshot.child("budget").getValue().toString(),
+                                            snapshot.child("priority").getValue().toString());
+                                }
+                            })
+                            .build();
+
+            adapter = new FirebaseRecyclerAdapter<ListItem, ViewHolder>(options) {
+                @Override
+                public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+                    View view = LayoutInflater.from(parent.getContext())
+                            .inflate(R.layout.list_item, parent, false);
+
+                    return new ViewHolder(view);
+                }
+
+
+                @Override
+                protected void onBindViewHolder(ViewHolder holder, final int position, ListItem model) {
+                    holder.setItem(model.getItem());
+                    holder.setBudget(model.getBudget());
+                    holder.setPriority(model.getPriority());
+                    holder.root.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent intent=new Intent(getApplicationContext(),search.class);
+                            intent.putExtra("click",String.valueOf(position));
+                            startActivity(intent);
+                            //Toast.makeText(MainActivity.this, String.valueOf(position), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+            };
+            recyclerView.setAdapter(adapter);
+            ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.DOWN | ItemTouchHelper.UP) {
+
+                @Override
+                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                    Toast.makeText(MainActivity.this, "on Move", Toast.LENGTH_SHORT).show();
+                    return false;
+                }
+
+                @Override
+                public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+                    Toast.makeText(MainActivity.this, "on Swiped ", Toast.LENGTH_SHORT).show();
+                    //Remove swiped item from list and notify the RecyclerView
+                    final int position = viewHolder.getAdapterPosition();
+                    FirebaseDatabase.getInstance()
+                            .getReference()
+                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
+                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                        if(position==count)
+                                        {
+                                            snapshot.getRef().removeValue();
+                                            Toast.makeText(getApplicationContext(),"Deleted",Toast.LENGTH_SHORT).show();
+                                            break;
+                                        }
+                                        count++;
+                                    }
+                                }
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+                                }
+                            });
+                    count=0;
+                    adapter.notifyItemRemoved(position);
+                }
+            };
+            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+            itemTouchHelper.attachToRecyclerView(recyclerView);
             //displaylist();
             // Snackbar.make(activity_main,"Welcome"+FirebaseAuth.getInstance().getCurrentUser().getEmail(),Snackbar.LENGTH_SHORT).show();
             //load content
@@ -155,87 +239,7 @@ public class MainActivity extends AppCompatActivity {
 //                    }
 //                });
 //        count=0;
-            Query query = FirebaseDatabase.getInstance()
-                    .getReference()
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
 
-            FirebaseRecyclerOptions<ListItem> options =
-                    new FirebaseRecyclerOptions.Builder<ListItem>()
-                            .setQuery(query, new SnapshotParser<ListItem>() {
-                                @NonNull
-                                @Override
-                                public ListItem parseSnapshot(@NonNull DataSnapshot snapshot) {
-                                    return new ListItem(snapshot.child("item").getValue().toString(),
-                                            snapshot.child("budget").getValue().toString(),
-                                            snapshot.child("priority").getValue().toString());
-                                }
-                            })
-                            .build();
-
-            adapter = new FirebaseRecyclerAdapter<ListItem, ViewHolder>(options) {
-                @Override
-                public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-                    View view = LayoutInflater.from(parent.getContext())
-                            .inflate(R.layout.list_item, parent, false);
-
-                    return new ViewHolder(view);
-                }
-
-
-                @Override
-                protected void onBindViewHolder(ViewHolder holder, final int position, ListItem model) {
-                    holder.setItem(model.getItem());
-                    holder.setBudget(model.getBudget());
-                   holder.setPriority(model.getPriority());
-                    holder.root.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Toast.makeText(MainActivity.this, String.valueOf(position), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-
-            };
-            recyclerView.setAdapter(adapter);
-        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.DOWN | ItemTouchHelper.UP) {
-
-            @Override
-            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                Toast.makeText(MainActivity.this, "on Move", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-
-            @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-                Toast.makeText(MainActivity.this, "on Swiped ", Toast.LENGTH_SHORT).show();
-                //Remove swiped item from list and notify the RecyclerView
-                final int position = viewHolder.getAdapterPosition();
-                FirebaseDatabase.getInstance()
-                .getReference()
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            if(position==count)
-                            {
-                                snapshot.getRef().removeValue();
-                                Toast.makeText(getApplicationContext(),"Deleted",Toast.LENGTH_SHORT).show();
-                                break;
-                            }
-                            count++;
-                        }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
-        count=0;
-                adapter.notifyItemRemoved(position);
-            }
-        };
-        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-        itemTouchHelper.attachToRecyclerView(recyclerView);
         }
 
     @Override
@@ -354,6 +358,12 @@ public class MainActivity extends AppCompatActivity {
             timetext.setText(hour_x+":"+minute_x);
         }
     };
+
+    public void search(View view) {
+        Intent intent=new Intent(getApplicationContext(),search.class);
+        intent.putExtra("click","-1");
+        startActivity(intent);
+    }
 }
     class ViewHolder extends RecyclerView.ViewHolder {
     public LinearLayout root;
