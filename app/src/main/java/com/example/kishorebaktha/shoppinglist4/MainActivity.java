@@ -1,13 +1,31 @@
 package com.example.kishorebaktha.shoppinglist4;
 
+import android.Manifest;
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.icu.util.Calendar;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -50,46 +68,86 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
+import static android.content.Context.LOCATION_SERVICE;
+
 public class MainActivity extends AppCompatActivity {
-    private static int SIGN_IN_CODE=1;
+    private static int SIGN_IN_CODE = 1;
     LinearLayout activity_main;
-    int year_x,month_x,day_x;
-    static final int dialog_id=0;
-    static final int dialog_id2=1;
-    TextView datetext,timetext;
-    int hour_x,minute_x;
+    int year_x, month_x, day_x;
+    static final int dialog_id = 0;
+    static final int dialog_id2 = 1;
+    TextView datetext, timetext;
+    int hour_x, minute_x;
+    private int notificationid=1;
+    private ProgressDialog progressDialog;
+    private LocationManager locationManager;
+    Double userLongitude, userLatitude;
+    private LocationListener listener;
+    final static int req1 = 1;
+    public String a = "0";
     private RecyclerView recyclerView;
     private LinearLayoutManager linearLayoutManager;
     private FirebaseRecyclerAdapter adapter;
-    int count=0;
-   // private FirebaseListAdapter<ListItem> Adapter;
+    int count = 0;
+    int click;
+
+    // private FirebaseListAdapter<ListItem> Adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         recyclerView = findViewById(R.id.list);
-        activity_main=(LinearLayout) findViewById(R.id.activity_main);
+        activity_main = (LinearLayout) findViewById(R.id.activity_main);
         check();
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        listener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                userLongitude = location.getLongitude();
+                userLatitude = location.getLatitude();
+                locationManager.removeUpdates(listener);
+                //locationManager = null;
+                Intent intent = new Intent(getApplicationContext(), search.class);
+                intent.putExtra("latitude", userLatitude.toString());
+                intent.putExtra("longitude", userLongitude.toString());
+                intent.putExtra("click", String.valueOf(click));
+                progressDialog.dismiss();
+                search.specificitem="";
+                startActivity(intent);
+
+            }
+
+            @Override
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+            }
+
+            @Override
+            public void onProviderEnabled(String s) {
+            }
+
+            @Override
+            public void onProviderDisabled(String s) {
+                Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(i);
+            }
+        };
     }
-    public void check()
-    {
-        if(FirebaseAuth.getInstance().getCurrentUser()==null)
-        {
-            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().build(),SIGN_IN_CODE);
-        }
-        else
-        {
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public void check() {
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().build(), SIGN_IN_CODE);
+        } else {
             linearLayoutManager = new LinearLayoutManager(this);
             recyclerView.setLayoutManager(linearLayoutManager);
             recyclerView.setHasFixedSize(true);
-           // displaylist();
+            // displaylist();
             final Calendar cal;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 cal = Calendar.getInstance();
-                year_x=cal.get(java.util.Calendar.YEAR);
-                month_x=cal.get(java.util.Calendar.MONTH);
-                day_x=cal.get(java.util.Calendar.DAY_OF_MONTH);
-            }
+                year_x = cal.get(java.util.Calendar.YEAR);
+                month_x = cal.get(java.util.Calendar.MONTH);
+                day_x = cal.get(java.util.Calendar.DAY_OF_MONTH);
+
             Query query = FirebaseDatabase.getInstance()
                     .getReference()
                     .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
@@ -118,22 +176,38 @@ public class MainActivity extends AppCompatActivity {
 
 
                 @Override
-                protected void onBindViewHolder(ViewHolder holder, final int position, ListItem model) {
+                protected void onBindViewHolder(final ViewHolder holder, final int position, final ListItem model) {
                     holder.setItem(model.getItem());
                     holder.setBudget(model.getBudget());
                     holder.setPriority(model.getPriority());
+                  // Toast.makeText(getApplicationContext(),String.valueOf(position),Toast.LENGTH_LONG).show();
                     holder.root.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            Intent intent=new Intent(getApplicationContext(),search.class);
-                            intent.putExtra("click",String.valueOf(position));
-                            startActivity(intent);
+                            progressDialog = ProgressDialog.show(view.getContext(),"Sending request","Please wait...",false,false);
+                            click = position;
+                            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                // TODO: Consider calling
+                                //    ActivityCompat#requestPermissions
+                                // here to request the missing permissions, and then overriding
+                                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                //                                          int[] grantResults)
+                                // to handle the case where the user grants the permission. See the documentation
+                                // for ActivityCompat#requestPermissions for more details.
+                                return;
+                            }
+                            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
+//                            Intent intent = new Intent(getApplicationContext(), search.class);
+//                            intent.putExtra("click", String.valueOf(position));
+//                            startActivity(intent);
                             //Toast.makeText(MainActivity.this, String.valueOf(position), Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
 
             };
+           // Toast.makeText(getApplicationContext(),"CALLED",Toast.LENGTH_LONG).show();
+           // adapter.startListening();
             recyclerView.setAdapter(adapter);
             ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.DOWN | ItemTouchHelper.UP) {
 
@@ -155,21 +229,25 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onDataChange(DataSnapshot dataSnapshot) {
                                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                                        if(position==count)
-                                        {
+                                        if (position == count) {
                                             snapshot.getRef().removeValue();
-                                            Toast.makeText(getApplicationContext(),"Deleted",Toast.LENGTH_SHORT).show();
+                                          //  Toast.makeText(getApplicationContext(), "Deleted", Toast.LENGTH_SHORT).show();
+                                            RecyclerView.Adapter adapter = recyclerView.getAdapter();
+                                            recyclerView.setAdapter(null);
+                                            recyclerView.setAdapter(adapter);
                                             break;
                                         }
                                         count++;
                                     }
                                 }
+
                                 @Override
                                 public void onCancelled(DatabaseError databaseError) {
                                 }
                             });
-                    count=0;
-                    adapter.notifyItemRemoved(position);
+                    count = 0;click=0;
+                    //adapter.notifyItemRemoved(position);
+                   // recyclerView.getAdapter().notifyDataSetChanged();
                 }
             };
             ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
@@ -181,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void displaylist() {
-       // Toast.makeText(getApplicationContext(),"hello",Toast.LENGTH_LONG).show();
+        // Toast.makeText(getApplicationContext(),"hello",Toast.LENGTH_LONG).show();
 //        Query query = FirebaseDatabase.getInstance()
 //                .getReference()
 //                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
@@ -240,30 +318,28 @@ public class MainActivity extends AppCompatActivity {
 //                });
 //        count=0;
 
-        }
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode==SIGN_IN_CODE&&resultCode==RESULT_OK)
-        {
-            Snackbar.make(activity_main,"Successfully signed in",Snackbar.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Snackbar.make(activity_main,"Couldn't sign in...try again later",Snackbar.LENGTH_SHORT).show();
+        if (requestCode == SIGN_IN_CODE && resultCode == RESULT_OK) {
+            Snackbar.make(activity_main, "Successfully signed in", Snackbar.LENGTH_SHORT).show();
+        } else {
+            Snackbar.make(activity_main, "Couldn't sign in...try again later", Snackbar.LENGTH_SHORT).show();
             finish();
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if(item.getItemId()==R.id.signout)
-        {
+        if (item.getItemId() == R.id.signout) {
             AuthUI.getInstance().signOut(this).addOnCompleteListener(new OnCompleteListener<Void>() {
                 @Override
                 public void onComplete(@NonNull Task<Void> task) {
@@ -276,23 +352,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void additem(View view) {
-        Intent intent=new Intent(getApplicationContext(),Newitem.class);
-        intent.putExtra("name",FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
+        Intent intent = new Intent(getApplicationContext(), Newitem.class);
+        intent.putExtra("name", FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
         startActivity(intent);
     }
+
     @Override
     protected void onStart() {
         super.onStart();
-        if(FirebaseAuth.getInstance().getCurrentUser()!=null)
-        adapter.startListening();
+//        if(adapter!=null)
+//            adapter.startListening();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null)
+            adapter.startListening();
     }
 
 
     @Override
     protected void onStop() {
         super.onStop();
-        if(FirebaseAuth.getInstance().getCurrentUser()!=null)
-        adapter.stopListening();
+        if (FirebaseAuth.getInstance().getCurrentUser() != null)
+            adapter.stopListening();
     }
 
     public void reminder(View view) {
@@ -302,8 +381,8 @@ public class MainActivity extends AppCompatActivity {
         Button btndate = (Button) dialog.findViewById(R.id.datebutton);
         Button btntime = (Button) dialog.findViewById(R.id.timebutton);
         Button set = (Button) dialog.findViewById(R.id.set);
-         datetext=dialog.findViewById(R.id.datetext);
-         timetext=dialog.findViewById(R.id.timetext);
+        datetext = dialog.findViewById(R.id.datetext);
+        timetext = dialog.findViewById(R.id.timetext);
         btndate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -317,9 +396,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         set.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onClick(View view) {
-                Toast.makeText(getApplicationContext(),"Reminder set successfully",Toast.LENGTH_SHORT).show();
+                Intent intent=new Intent(MainActivity.this,AlarmReceiver.class);
+                intent.putExtra("notificationid",notificationid);
+                intent.putExtra("todo","PURCHASE YOUR ITEMS IN THE LIST");
+                PendingIntent alarmintent=PendingIntent.getBroadcast(MainActivity.this,0,intent,PendingIntent.FLAG_CANCEL_CURRENT);
+                AlarmManager alarmManager=(AlarmManager)getSystemService(ALARM_SERVICE);
+                        int hour=hour_x;
+                        int minute=minute_x;
+                        java.util.Calendar starttime= java.util.Calendar.getInstance();
+                        starttime.set(java.util.Calendar.DAY_OF_MONTH,day_x);
+                        starttime.set(java.util.Calendar.MONTH,month_x-1);
+                        starttime.set(java.util.Calendar.YEAR,year_x);
+                        starttime.set(java.util.Calendar.HOUR_OF_DAY,hour);
+                        starttime.set(java.util.Calendar.MINUTE,minute);
+                        starttime.set(java.util.Calendar.SECOND,0);
+//                java.util.Calendar cal = java.util.Calendar.getInstance();
+//              cal.set(year_x, month_x, day_x, hour_x, minute_x, 0);
+                        long alarmstarttime=starttime.getTimeInMillis();
+                        alarmManager.set(AlarmManager.RTC_WAKEUP,alarmstarttime,alarmintent);
+                Toast.makeText(getApplicationContext(), "Reminder set successfully", Toast.LENGTH_SHORT).show();
                 dialog.dismiss();
             }
         });
@@ -330,39 +428,50 @@ public class MainActivity extends AppCompatActivity {
         dialog.getWindow().setLayout(width, height);
         dialog.show();
     }
+
     @Override
-    public Dialog onCreateDialog(int id)
-    {
-        if(id==dialog_id)
-            return new TimePickerDialog(this,TimePickerListener,hour_x,minute_x,false);
-        else if(id==dialog_id2)
-            return new DatePickerDialog(this,DatePickerListener,year_x,month_x,day_x);
+    public Dialog onCreateDialog(int id) {
+        if (id == dialog_id)
+            return new TimePickerDialog(this, TimePickerListener, hour_x, minute_x, false);
+        else if (id == dialog_id2)
+            return new DatePickerDialog(this, DatePickerListener, year_x, month_x, day_x);
         return null;
     }
-    protected DatePickerDialog.OnDateSetListener DatePickerListener= new DatePickerDialog.OnDateSetListener() {
+
+    protected DatePickerDialog.OnDateSetListener DatePickerListener = new DatePickerDialog.OnDateSetListener() {
         @Override
         public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-            year_x=year;
-            month_x=month+1;//DEFAULT STARTS FROM 0
-            day_x=dayOfMonth;
-            datetext.setText(day_x+"/"+month_x+"/"+year_x);
+            year_x = year;
+            month_x = month + 1;//DEFAULT STARTS FROM 0
+            day_x = dayOfMonth;
+            datetext.setText(day_x + "/" + month_x + "/" + year_x);
         }
     };
-    protected TimePickerDialog.OnTimeSetListener TimePickerListener=new TimePickerDialog.OnTimeSetListener()
-    {
+    protected TimePickerDialog.OnTimeSetListener TimePickerListener = new TimePickerDialog.OnTimeSetListener() {
 
         @Override
         public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-            hour_x=hourOfDay;
-            minute_x=minute;
-            timetext.setText(hour_x+":"+minute_x);
+            hour_x = hourOfDay;
+            minute_x = minute;
+            timetext.setText(hour_x + ":" + minute_x);
         }
     };
 
     public void search(View view) {
-        Intent intent=new Intent(getApplicationContext(),search.class);
-        intent.putExtra("click","-1");
-        startActivity(intent);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        click=-1;
+        progressDialog = ProgressDialog.show(this,"Sending request","Please wait...",false,false);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
+
     }
 }
     class ViewHolder extends RecyclerView.ViewHolder {

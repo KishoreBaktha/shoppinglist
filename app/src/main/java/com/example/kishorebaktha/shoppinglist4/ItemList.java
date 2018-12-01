@@ -34,7 +34,7 @@ public class ItemList extends AppCompatActivity {
     public static ListView data;
     public static customAdapter2 custom;
     String shopname;
-
+    String specificitem;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,6 +43,7 @@ public class ItemList extends AppCompatActivity {
         custom = new customAdapter2(this);
         Intent intent=getIntent();
         shopname=intent.getStringExtra("name");
+        specificitem=intent.getStringExtra("specificitem");
 
         searchitems(new MyCallback4() {
 
@@ -77,7 +78,8 @@ public class ItemList extends AppCompatActivity {
     }
     public void searchitems(final MyCallback4 mycallback)
     {
-
+        if(specificitem.equals(""))
+        {
             FirebaseDatabase.getInstance()
                     .getReference()
                     .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
@@ -95,6 +97,34 @@ public class ItemList extends AppCompatActivity {
                         public void onCancelled(DatabaseError databaseError) {
                         }
                     });
+        }
+        else
+        {
+            FirebaseDatabase.getInstance()
+                    .getReference()
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
+                    .addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                if(specificitem.equals(snapshot.child("item").getValue().toString()))
+                                {
+                                    name.add(snapshot.child("item").getValue().toString());
+                                    budget.add(Integer.parseInt(snapshot.child("budget").getValue().toString()));
+                                    break;
+                                }
+
+                            }
+                            mycallback.onCallback4(name,budget);
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
+                    });
+        }
+
+
         }
 
     public void searchitems2(final MyCallback5 mycallback)

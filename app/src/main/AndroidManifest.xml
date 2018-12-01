@@ -46,6 +46,6 @@
         <activity android:name=".additem" />
         <activity android:name=".search" />
         <activity android:name=".ItemList"></activity>
+        <receiver android:name=".AlarmReceiver"/>
     </application>
-
 </manifest>

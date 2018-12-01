@@ -48,7 +48,7 @@ public class Newitem extends AppCompatActivity {
         high.setBackgroundColor(Color.GREEN);
         medium.setBackgroundColor(Color.GREEN);
         low.setBackgroundColor(Color.GREEN);
-
+      // title.setTextColor(Color.RED);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_dropdown_item_1line, ITEMS);
         title.setAdapter(adapter);
@@ -83,17 +83,39 @@ public class Newitem extends AppCompatActivity {
         String budgettext=budget.getText().toString();
      //   String remindertext=reminder.getText().toString();
          final Intent intent=getIntent();
-        String name=intent.getStringExtra("name");
-        Toast.makeText(getApplicationContext(),name,Toast.LENGTH_SHORT).show();
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(name).push();
-        Map<String, Object> map = new HashMap<>();
-        map.put("item", titletext);
-        map.put("budget", budgettext);
-        map.put("priority",priority);
-        databaseReference.setValue(map);
-        Toast.makeText(getApplicationContext(),"SUCCESS",Toast.LENGTH_SHORT).show();
-                 Intent intent1=new Intent(getApplicationContext(),MainActivity.class);
-                    startActivity(intent1);
+        String name=intent.getStringExtra("name");int i;
+        for( i=0;i<ITEMS.length;i++)
+        {
+            if(titletext.equals(ITEMS[i]))
+                break;
+        }
+        if(i==ITEMS.length)
+        {
+            title.setTextColor(Color.RED);
+            Toast.makeText(getApplicationContext(),"SORRY,ITEM NOT AVAILABLE",Toast.LENGTH_LONG).show();
+            title.requestFocus();
+            title.setOnClickListener(new  View.OnClickListener() {
+                public void onClick(View view) {
+                    title.setTextColor(Color.BLACK);
+                    ///do what you want the click to do
+                }
+            });
+          //  if(title.getText().toString().trim().length()==0)
+        }
+        else
+        {
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(name).push();
+            Map<String, Object> map = new HashMap<>();
+            map.put("item", titletext);
+            map.put("budget", budgettext);
+            map.put("priority",priority);
+            databaseReference.setValue(map);
+            Toast.makeText(getApplicationContext(),"SUCCESS",Toast.LENGTH_SHORT).show();
+            Intent intent1=new Intent(getApplicationContext(),MainActivity.class);
+            startActivity(intent1);
+        }
+        //Toast.makeText(getApplicationContext(),name,Toast.LENGTH_SHORT).show();
+
 
 //        FirebaseDatabase.getInstance().getReference().child(name).push().setValue(new ListItem(titletext,budgettext,priority )  ).addOnCompleteListener(new OnCompleteListener<Void>() {
 //            @Override
