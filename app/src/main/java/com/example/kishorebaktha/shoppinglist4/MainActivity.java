@@ -65,6 +65,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.karan.churi.PermissionManager.PermissionManager;
 
 import java.util.List;
 
@@ -78,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     static final int dialog_id2 = 1;
     TextView datetext, timetext;
     int hour_x, minute_x;
+    PermissionManager permissionManager;
     private int notificationid=1;
     private ProgressDialog progressDialog;
     private LocationManager locationManager;
@@ -138,192 +140,137 @@ public class MainActivity extends AppCompatActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder().build(), SIGN_IN_CODE);
         } else {
-            linearLayoutManager = new LinearLayoutManager(this);
-            recyclerView.setLayoutManager(linearLayoutManager);
-            recyclerView.setHasFixedSize(true);
-            // displaylist();
-            final Calendar cal;
-                cal = Calendar.getInstance();
-                year_x = cal.get(java.util.Calendar.YEAR);
-                month_x = cal.get(java.util.Calendar.MONTH);
-                day_x = cal.get(java.util.Calendar.DAY_OF_MONTH);
-
-            Query query = FirebaseDatabase.getInstance()
-                    .getReference()
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
-
-            FirebaseRecyclerOptions<ListItem> options =
-                    new FirebaseRecyclerOptions.Builder<ListItem>()
-                            .setQuery(query, new SnapshotParser<ListItem>() {
-                                @NonNull
-                                @Override
-                                public ListItem parseSnapshot(@NonNull DataSnapshot snapshot) {
-                                    return new ListItem(snapshot.child("item").getValue().toString(),
-                                            snapshot.child("budget").getValue().toString(),
-                                            snapshot.child("priority").getValue().toString());
-                                }
-                            })
-                            .build();
-
-            adapter = new FirebaseRecyclerAdapter<ListItem, ViewHolder>(options) {
-                @Override
-                public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-                    View view = LayoutInflater.from(parent.getContext())
-                            .inflate(R.layout.list_item, parent, false);
-
-                    return new ViewHolder(view);
-                }
-
-
-                @Override
-                protected void onBindViewHolder(final ViewHolder holder, final int position, final ListItem model) {
-                    holder.setItem(model.getItem());
-                    holder.setBudget(model.getBudget());
-                    holder.setPriority(model.getPriority());
-                  // Toast.makeText(getApplicationContext(),String.valueOf(position),Toast.LENGTH_LONG).show();
-                    holder.root.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            progressDialog = ProgressDialog.show(view.getContext(),"Sending request","Please wait...",false,false);
-                            click = position;
-                            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                // TODO: Consider calling
-                                //    ActivityCompat#requestPermissions
-                                // here to request the missing permissions, and then overriding
-                                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                //                                          int[] grantResults)
-                                // to handle the case where the user grants the permission. See the documentation
-                                // for ActivityCompat#requestPermissions for more details.
-                                return;
-                            }
-                            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
-//                            Intent intent = new Intent(getApplicationContext(), search.class);
-//                            intent.putExtra("click", String.valueOf(position));
-//                            startActivity(intent);
-                            //Toast.makeText(MainActivity.this, String.valueOf(position), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-
-            };
-           // Toast.makeText(getApplicationContext(),"CALLED",Toast.LENGTH_LONG).show();
-           // adapter.startListening();
-            recyclerView.setAdapter(adapter);
-            ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.DOWN | ItemTouchHelper.UP) {
-
-                @Override
-                public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                    Toast.makeText(MainActivity.this, "on Move", Toast.LENGTH_SHORT).show();
-                    return false;
-                }
-
-                @Override
-                public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
-                    Toast.makeText(MainActivity.this, "on Swiped ", Toast.LENGTH_SHORT).show();
-                    //Remove swiped item from list and notify the RecyclerView
-                    final int position = viewHolder.getAdapterPosition();
-                    FirebaseDatabase.getInstance()
-                            .getReference()
-                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
-                            .addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                                        if (position == count) {
-                                            snapshot.getRef().removeValue();
-                                          //  Toast.makeText(getApplicationContext(), "Deleted", Toast.LENGTH_SHORT).show();
-                                            RecyclerView.Adapter adapter = recyclerView.getAdapter();
-                                            recyclerView.setAdapter(null);
-                                            recyclerView.setAdapter(adapter);
-                                            break;
-                                        }
-                                        count++;
-                                    }
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-                                }
-                            });
-                    count = 0;click=0;
-                    //adapter.notifyItemRemoved(position);
-                   // recyclerView.getAdapter().notifyDataSetChanged();
-                }
-            };
-            ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
-            itemTouchHelper.attachToRecyclerView(recyclerView);
-            //displaylist();
-            // Snackbar.make(activity_main,"Welcome"+FirebaseAuth.getInstance().getCurrentUser().getEmail(),Snackbar.LENGTH_SHORT).show();
-            //load content
+            displaydata();
         }
     }
 
-    private void displaylist() {
-        // Toast.makeText(getApplicationContext(),"hello",Toast.LENGTH_LONG).show();
-//        Query query = FirebaseDatabase.getInstance()
-//                .getReference()
-//                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
-//        FirebaseListOptions<ListItem> options = new FirebaseListOptions.Builder<ListItem>()
-//                .setQuery(query, ListItem.class)
-//                .setLayout(R.layout.list_item)
-//                .build();
-//      //  Toast.makeText(getApplicationContext(),"hello2",Toast.LENGTH_LONG).show();
-//            final ListView message=(ListView)findViewById(R.id.listView);
-//         Adapter=new FirebaseListAdapter<ListItem>(options) {
-//                @Override
-//                protected void populateView(View v, ListItem model, int position)
-//                {
-//                    //Toast.makeText(getApplicationContext(),"hello3",Toast.LENGTH_LONG).show();
-//                   // get references to views of list_item.xml
-//                    TextView item,budget,priority;
-//                    item=(TextView)v.findViewById(R.id.item2);
-//                    budget=(TextView)v.findViewById(R.id.budget2);
-//                    priority=(TextView)v.findViewById(R.id.priority2);
-//                    item.setText(model.getItem());
-//                    budget.setText(model.getBudget());
-//                    priority.setText(model.getPriority());
-//                }
-//            };
-//            message.setAdapter(Adapter);
-//            message.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//                @Override
-//                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                    Toast.makeText(getApplicationContext(),"clocked me",Toast.LENGTH_SHORT).show();
-//                    remove(position);
-//                }
-//            });
-//        }
-//    public void remove(final int pos)
-//    {
-//        Toast.makeText(getApplicationContext(),String.valueOf(pos),Toast.LENGTH_SHORT).show();
-//        FirebaseDatabase.getInstance()
-//                .getReference()
-//                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
-//                .addListenerForSingleValueEvent(new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(DataSnapshot dataSnapshot) {
-//                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-//                            if(pos==count)
-//                            {
-//                                snapshot.getRef().removeValue();
-//                                Toast.makeText(getApplicationContext(),"Deleted",Toast.LENGTH_SHORT).show();
-//                                break;
-//                            }
-//                            count++;
-//                        }
-//                    }
-//                    @Override
-//                    public void onCancelled(DatabaseError databaseError) {
-//                    }
-//                });
-//        count=0;
+    private void displaydata() {
+        permissionManager=new PermissionManager(){};
+        permissionManager.checkAndRequestPermissions(this);
+        linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setHasFixedSize(true);
+        // displaylist();
+        final Calendar cal;
+        cal = Calendar.getInstance();
+        year_x = cal.get(java.util.Calendar.YEAR);
+        month_x = cal.get(java.util.Calendar.MONTH);
+        day_x = cal.get(java.util.Calendar.DAY_OF_MONTH);
 
+        Query query = FirebaseDatabase.getInstance()
+                .getReference()
+                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
+
+        FirebaseRecyclerOptions<ListItem> options =
+                new FirebaseRecyclerOptions.Builder<ListItem>()
+                        .setQuery(query, new SnapshotParser<ListItem>() {
+                            @NonNull
+                            @Override
+                            public ListItem parseSnapshot(@NonNull DataSnapshot snapshot) {
+                                return new ListItem(snapshot.child("item").getValue().toString(),
+                                        snapshot.child("budget").getValue().toString(),
+                                        snapshot.child("priority").getValue().toString());
+                            }
+                        })
+                        .build();
+
+        adapter = new FirebaseRecyclerAdapter<ListItem, ViewHolder>(options) {
+            @Override
+            public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+                View view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.list_item, parent, false);
+
+                return new ViewHolder(view);
+            }
+
+
+            @Override
+            protected void onBindViewHolder(final ViewHolder holder, final int position, final ListItem model) {
+                holder.setItem(model.getItem());
+                holder.setBudget(model.getBudget());
+                holder.setPriority(model.getPriority());
+                // Toast.makeText(getApplicationContext(),String.valueOf(position),Toast.LENGTH_LONG).show();
+                holder.root.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        progressDialog = ProgressDialog.show(view.getContext(),"Sending request","Please wait...",false,false);
+                        click = position;
+//                            userLongitude =18.06451842;
+//                            userLatitude =59.36944417;
+                        // locationManager.removeUpdates(listener);
+                        //locationManager = null;
+                        Intent intent = new Intent(getApplicationContext(), search.class);
+//                            intent.putExtra("latitude", userLatitude.toString());
+//                            intent.putExtra("longitude", userLongitude.toString());
+                        intent.putExtra("click", String.valueOf(click));
+                        progressDialog.dismiss();
+                        search.specificitem="";
+                        startActivity(intent);
+                    }
+                });
+            }
+
+        };
+        recyclerView.setAdapter(adapter);
+        adapter.startListening();
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.DOWN | ItemTouchHelper.UP) {
+
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                Toast.makeText(MainActivity.this, "on Move", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+                Toast.makeText(MainActivity.this, "on Swiped ", Toast.LENGTH_SHORT).show();
+                //Remove swiped item from list and notify the RecyclerView
+                final int position = viewHolder.getAdapterPosition();
+                FirebaseDatabase.getInstance()
+                        .getReference()
+                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                    if (position == count) {
+                                        snapshot.getRef().removeValue();
+                                        //  Toast.makeText(getApplicationContext(), "Deleted", Toast.LENGTH_SHORT).show();
+                                        RecyclerView.Adapter adapter = recyclerView.getAdapter();
+                                        recyclerView.setAdapter(null);
+                                        recyclerView.setAdapter(adapter);
+                                        break;
+                                    }
+                                    count++;
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
+                count = 0;click=0;
+                //adapter.notifyItemRemoved(position);
+                // recyclerView.getAdapter().notifyDataSetChanged();
+            }
+        };
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+        //displaylist();
+        // Snackbar.make(activity_main,"Welcome"+FirebaseAuth.getInstance().getCurrentUser().getEmail(),Snackbar.LENGTH_SHORT).show();
+        //load content
     }
+//    public void onRequestPermissionsResult(int requestCode,String permissions[], int[] grantResults) {
+//        permissionManager.checkResult(requestCode,permissions, grantResults);
+//
+//    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SIGN_IN_CODE && resultCode == RESULT_OK) {
             Snackbar.make(activity_main, "Successfully signed in", Snackbar.LENGTH_SHORT).show();
+            displaydata();
         } else {
             Snackbar.make(activity_main, "Couldn't sign in...try again later", Snackbar.LENGTH_SHORT).show();
             finish();
@@ -360,17 +307,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        if (adapter!=null)
+            adapter.startListening();
 //        if(adapter!=null)
 //            adapter.startListening();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null)
-            adapter.startListening();
+//        if (FirebaseAuth.getInstance().getCurrentUser() != null)
+//            adapter.startListening();
     }
 
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (FirebaseAuth.getInstance().getCurrentUser() != null)
+        if (adapter!=null)
             adapter.stopListening();
     }
 
@@ -458,19 +407,30 @@ public class MainActivity extends AppCompatActivity {
     };
 
     public void search(View view) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            // TODO: Consider calling
+//            //    ActivityCompat#requestPermissions
+//            // here to request the missing permissions, and then overriding
+//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//            //                                          int[] grantResults)
+//            // to handle the case where the user grants the permission. See the documentation
+//            // for ActivityCompat#requestPermissions for more details.
+//            return;
+//        }
         click=-1;
         progressDialog = ProgressDialog.show(this,"Sending request","Please wait...",false,false);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
+//        userLongitude =18.06451842;
+//        userLatitude =59.36944417;
+       // locationManager.removeUpdates(listener);
+        //locationManager = null;
+        Intent intent = new Intent(getApplicationContext(), search.class);
+//        intent.putExtra("latitude", userLatitude.toString());
+//        intent.putExtra("longitude", userLongitude.toString());
+        intent.putExtra("click", String.valueOf(click));
+        progressDialog.dismiss();
+        search.specificitem="";
+        startActivity(intent);
+       // locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
 
     }
 }

@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">shoppinglist4</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="app_name">shoppinglist</string>
+    <string name="title_activity_maps">shoppinglist</string>
 </resources>

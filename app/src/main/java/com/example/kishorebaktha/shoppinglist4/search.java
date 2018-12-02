@@ -1,7 +1,10 @@
 package com.example.kishorebaktha.shoppinglist4;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -46,6 +49,7 @@ import java.util.stream.Collectors;
 
 import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.squareup.picasso.Picasso;
+import com.tbruyelle.rxpermissions2.RxPermissions;
 
 public class search extends AppCompatActivity {
     public static ListView data;
@@ -58,6 +62,8 @@ public class search extends AppCompatActivity {
     private LocationManager locationManager;
     Double userLongitude, userLatitude;
     private LocationListener listener;
+    private final int REQUEST_PERMISSION=1;
+    private ProgressDialog progressDialog;
     ArrayList<String> itemsize = new ArrayList<String>();
     ArrayList<String> itemdesc = new ArrayList<String>();
     ArrayList<String> itemshop = new ArrayList<String>();
@@ -73,6 +79,7 @@ public class search extends AppCompatActivity {
     ArrayList<String> timing = new ArrayList<String>();
     ArrayList<Integer> totalcost = new ArrayList<Integer>();
     ArrayList<String> url = new ArrayList<String>();
+    ArrayList<String> previtems = new ArrayList<String>();
     int countnumber = 0;
     int countposition = 0;
     int click;
@@ -86,8 +93,8 @@ public class search extends AppCompatActivity {
         custom = new customAdapter(this);
         Intent intent = getIntent();
         click = Integer.parseInt(intent.getStringExtra("click"));
-        userLatitude=Double.parseDouble(intent.getStringExtra("latitude"));
-        userLongitude=Double.parseDouble(intent.getStringExtra("longitude"));
+       // userLatitude=Double.parseDouble(intent.getStringExtra("latitude"));
+       // userLongitude=Double.parseDouble(intent.getStringExtra("longitude"));
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         listener = new LocationListener() {
             @Override
@@ -95,7 +102,122 @@ public class search extends AppCompatActivity {
                 userLongitude = location.getLongitude();
                 userLatitude = location.getLatitude();
                 locationManager.removeUpdates(listener);
-                locationManager = null;
+                progressDialog.dismiss();
+                custom.list.clear();
+                //countnumber=0;
+                countposition=0;
+                count = new ArrayList<Integer>();
+                prioritycount = new ArrayList<Integer>();
+                totalcost = new ArrayList<Integer>();
+                name = new ArrayList<String>();
+                budget = new ArrayList<Integer>();
+                priority = new ArrayList<Integer>();
+                itemname = new ArrayList<String>();
+                itemdesc = new ArrayList<String>();
+                itemcost = new ArrayList<Integer>();
+                itemsize = new ArrayList<String>();
+                itemshop = new ArrayList<String>();
+                shops = new ArrayList<String>();
+                previtems=new ArrayList<String>();
+                shopname = new ArrayList<String>();
+                searchitems(new MyCallback() {
+                    @Override
+                    public void onCallback(ArrayList<String> name2, ArrayList<Integer> priority2, final ArrayList<Integer> budget2) {
+                        name = name2;
+                        budget = budget2;
+                        priority = priority2;
+                        searchitems2(new MyCallback2() {
+                            @RequiresApi(api = Build.VERSION_CODES.N)
+                            @Override
+                            public void onCallback2(ArrayList<String> name2, ArrayList<Integer> cost, ArrayList<String> desc, ArrayList<String> size, ArrayList<String> shop) {
+                                itemname = name2;
+                                itemcost = cost;
+                                itemdesc = desc;
+                                itemsize = size;
+                                itemshop = shop;
+                                shops = new ArrayList<String>(new LinkedHashSet<String>(itemshop));
+                                for (int i = 0; i < shops.size(); i++) {
+                                    count.add(0);
+                                    prioritycount.add(0);
+                                    totalcost.add(0);
+                                }
+                                for (int i = 0; i < shops.size(); i++) {
+                                    previtems=new ArrayList<String>();
+                                    for (int j = 0; j < itemname.size(); j++) {
+                                        if (itemshop.get(j).equals(shops.get(i))) {
+                                            for (int m = 0; m < name.size(); m++) {
+                                                if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)&&!previtems.contains(name.get(m))) {
+                                                    previtems.add(name.get(m));
+                                                    totalcost.set(i, totalcost.get(i) + itemcost.get(j));
+                                                    prioritycount.set(i, prioritycount.get(i) + priority.get(m));
+                                                    // Toast.makeText(getApplicationContext(),priority.get(m).toString(),Toast.LENGTH_LONG).show();
+                                                    count.set(i, count.get(i) + 1);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                searchitems10(new MyCallback10() {
+                                    @Override
+                                    public void onCallback10(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url, ArrayList<Double> latitude2, ArrayList<Double> longitude2) {
+                                        shopname = name;
+                                        rating = rating;
+                                        timing = timing;
+                                        latitude = latitude2;
+                                        longitude = longitude2;
+                                        ArrayList<Double> distance=new ArrayList<Double>();
+                                        url = url;
+
+                                        // userLatitude=44.968046  ;
+                                        //userLongitude= -94.420307;
+
+                                        for(int i=0;i<shops.size();i++)
+                                        {
+                                            distance.add(getDistance(userLatitude,userLongitude,latitude.get(i),longitude.get(i)));
+                                        }
+                                        for(int i=0;i<shops.size();i++)
+                                        {
+                                            for(int j=0;j<shops.size()-i-1;j++)
+                                            {
+                                                if(distance.get(j)>distance.get(j+1))
+                                                {
+                                                    int tempcount=prioritycount.get(j);
+                                                    prioritycount.set(j,prioritycount.get(j+1));
+                                                    prioritycount.set(j+1,tempcount);
+                                                    String tempshop=shops.get(j);
+                                                    shops.set(j,shops.get(j+1));
+                                                    shops.set(j+1,tempshop);
+                                                    tempcount=count.get(j);
+                                                    count.set(j,count.get(j+1));
+                                                    count.set(j+1,tempcount);
+                                                    tempcount=totalcost.get(j);
+                                                    totalcost.set(j,totalcost.get(j+1));
+                                                    totalcost.set(j+1,tempcount);
+                                                    double tempcount2=distance.get(j);
+                                                    distance.set(j,distance.get(j+1));
+                                                    distance.set(j+1,tempcount2);
+                                                }
+                                            }
+                                        }
+
+                                        for (int i = 0; i < shops.size(); i++) {
+
+                                            for (int j = 0; j < shopname.size(); j++) {
+                                                if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0) {
+                                                    custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j),totalcost.get(i).toString(),url.get(j)));
+                                                }
+                                            }
+                                        }
+                                        data.setAdapter(custom);
+                                        // countnumber++;
+                                    }
+                                });
+
+                            }
+                        });
+                    }
+                });
+              //  locationManager = null;
 
             }
 
@@ -149,10 +271,12 @@ public class search extends AppCompatActivity {
                                 totalcost.add(0);
                             }
                             for (int i = 0; i < shops.size(); i++) {
+                                previtems=new ArrayList<String>();
                                 for (int j = 0; j < itemname.size(); j++) {
                                     if (itemshop.get(j).equals(shops.get(i))) {
                                         for (int m = 0; m < name.size(); m++) {
-                                            if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)) {
+                                            if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)&&!previtems.contains(name.get(m))) {
+                                                previtems.add(name.get(m));
                                                 totalcost.set(i, totalcost.get(i) + itemcost.get(j));
                                                 prioritycount.set(i, prioritycount.get(i) + priority.get(m));
                                                 // Toast.makeText(getApplicationContext(),priority.get(m).toString(),Toast.LENGTH_LONG).show();
@@ -189,7 +313,8 @@ public class search extends AppCompatActivity {
                                     timing = timing;
                                     url = url;
                                     if (countnumber == 0) {
-                                        for (int i = 0; i < shops.size(); i++) {
+                                        for (int i = 0; i < shops.size(); i++)
+                                        {
 
                                             for (int j = 0; j < shopname.size(); j++) {
                                                 if (shops.get(i).equals(shopname.get(j)) && count.get(i) > 0) {
@@ -206,12 +331,8 @@ public class search extends AppCompatActivity {
 //                                intent.putStringArrayListExtra("shops", shops);
 //                                intent.putIntegerArrayListExtra("count", count);
 //                                startActivity(intent)
-
-
                             //  Toast.makeText(getApplicationContext(),count.get(0).toString(),Toast.LENGTH_LONG).show();
                             // Toast.makeText(getApplicationContext(),String.valueOf(shops.size()),Toast.LENGTH_SHORT).show();
-
-
                         }
                     });
                     // }
@@ -222,17 +343,18 @@ public class search extends AppCompatActivity {
         }
     }
 
-
     public void searchitems(final MyCallback mycallback) {
-        if (click == -1) {
-
+        if (click == -1)
+        {
             FirebaseDatabase.getInstance()
                     .getReference()
                     .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
                     .addValueEventListener(new ValueEventListener() {
                         @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        public void onDataChange(DataSnapshot dataSnapshot)
+                        {
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren())
+                            {
                                 name.add(snapshot.child("item").getValue().toString());
                                 budget.add(Integer.parseInt(snapshot.child("budget").getValue().toString()));
                                 if (snapshot.child("priority").getValue().toString().equals("high"))
@@ -249,9 +371,9 @@ public class search extends AppCompatActivity {
                         public void onCancelled(DatabaseError databaseError) {
                         }
                     });
-        } else {
-
-            FirebaseDatabase.getInstance()
+        } else
+            {
+                FirebaseDatabase.getInstance()
                     .getReference()
                     .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
                     .addValueEventListener(new ValueEventListener() {
@@ -290,8 +412,10 @@ public class search extends AppCompatActivity {
                 .child("items")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    public void onDataChange(DataSnapshot dataSnapshot)
+                    {
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren())
+                        {
                             //if (snapshot.child("name").getValue().toString().equals(name.get(index).toString())) {
                             itemname.add(snapshot.child("name").getValue().toString());
                             itemcost.add(Integer.parseInt(snapshot.child("cost").getValue().toString()));
@@ -425,6 +549,7 @@ public class search extends AppCompatActivity {
             itemshop = new ArrayList<String>();
             shops = new ArrayList<String>();
             shopname = new ArrayList<String>();
+            previtems=new ArrayList<String>();
             countposition=0;
             searchitems(new MyCallback() {
                 @Override
@@ -448,10 +573,12 @@ public class search extends AppCompatActivity {
                                 totalcost.add(0);
                             }
                             for (int i = 0; i < shops.size(); i++) {
+                                previtems=new ArrayList<String>();
                                 for (int j = 0; j < itemname.size(); j++) {
                                     if (itemshop.get(j).equals(shops.get(i))) {
                                         for (int m = 0; m < name.size(); m++) {
-                                            if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)) {
+                                            if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)&&!previtems.contains(name.get(m))) {
+                                                previtems.add(name.get(m));
                                                 totalcost.set(i, totalcost.get(i) + itemcost.get(j));
                                                 prioritycount.set(i, prioritycount.get(i) + priority.get(m));
                                                 // Toast.makeText(getApplicationContext(),priority.get(m).toString(),Toast.LENGTH_LONG).show();
@@ -506,157 +633,76 @@ public class search extends AppCompatActivity {
             });
 
         } else if (item.getItemId() == R.id.sortlocationmenu) {
-            custom.list.clear();
-            //countnumber=0;
-            countposition=0;
-            count = new ArrayList<Integer>();
-            prioritycount = new ArrayList<Integer>();
-            totalcost = new ArrayList<Integer>();
-            name = new ArrayList<String>();
-            budget = new ArrayList<Integer>();
-            priority = new ArrayList<Integer>();
-            itemname = new ArrayList<String>();
-            itemdesc = new ArrayList<String>();
-            itemcost = new ArrayList<Integer>();
-            itemsize = new ArrayList<String>();
-            itemshop = new ArrayList<String>();
-            shops = new ArrayList<String>();
-            shopname = new ArrayList<String>();
-            searchitems(new MyCallback() {
-                @Override
-                public void onCallback(ArrayList<String> name2, ArrayList<Integer> priority2, final ArrayList<Integer> budget2) {
-                    name = name2;
-                    budget = budget2;
-                    priority = priority2;
-                    searchitems2(new MyCallback2() {
-                        @RequiresApi(api = Build.VERSION_CODES.N)
-                        @Override
-                        public void onCallback2(ArrayList<String> name2, ArrayList<Integer> cost, ArrayList<String> desc, ArrayList<String> size, ArrayList<String> shop) {
-                            itemname = name2;
-                            itemcost = cost;
-                            itemdesc = desc;
-                            itemsize = size;
-                            itemshop = shop;
-                            shops = new ArrayList<String>(new LinkedHashSet<String>(itemshop));
-                            for (int i = 0; i < shops.size(); i++) {
-                                count.add(0);
-                                prioritycount.add(0);
-                                totalcost.add(0);
-                            }
-                            for (int i = 0; i < shops.size(); i++) {
-                                for (int j = 0; j < itemname.size(); j++) {
-                                    if (itemshop.get(j).equals(shops.get(i))) {
-                                        for (int m = 0; m < name.size(); m++) {
-                                            if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)) {
-                                                totalcost.set(i, totalcost.get(i) + itemcost.get(j));
-                                                prioritycount.set(i, prioritycount.get(i) + priority.get(m));
-                                                // Toast.makeText(getApplicationContext(),priority.get(m).toString(),Toast.LENGTH_LONG).show();
-                                                count.set(i, count.get(i) + 1);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-//                            for(int i=0;i<shops.size();i++)
-//                            {
-//                                for(int j=0;j<shops.size()-i-1;j++)
-//                                {
-//                                    if(totalcost.get(j)>totalcost.get(j+1))
-//                                    {
-//                                        int tempcount=prioritycount.get(j);
-//                                        prioritycount.set(j,prioritycount.get(j+1));
-//                                        prioritycount.set(j+1,tempcount);
-//                                        String tempshop=shops.get(j);
-//                                        shops.set(j,shops.get(j+1));
-//                                        shops.set(j+1,tempshop);
-//                                        tempcount=count.get(j);
-//                                        count.set(j,count.get(j+1));
-//                                        count.set(j+1,tempcount);
-//                                        tempcount=totalcost.get(j);
-//                                        totalcost.set(j,totalcost.get(j+1));
-//                                        totalcost.set(j+1,tempcount);
-//                                    }
-//                                }
-//                            }
 
-                            searchitems10(new MyCallback10() {
-                                @Override
-                                public void onCallback10(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url, ArrayList<Double> latitude2, ArrayList<Double> longitude2) {
-                                    shopname = name;
-                                    rating = rating;
-                                    timing = timing;
-                                    latitude = latitude2;
-                                    longitude = longitude2;
-                                    ArrayList<Double> distance=new ArrayList<Double>();
-                                    url = url;
-                                    if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                        // TODO: Consider calling
-                                        //    ActivityCompat#requestPermissions
-                                        // here to request the missing permissions, and then overriding
-                                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                        //                                          int[] grantResults)
-                                        // to handle the case where the user grants the permission. See the documentation
-                                        // for ActivityCompat#requestPermissions for more details.
-                                        return;
-                                    }
-                                   // userLatitude=44.968046  ;
-                                    //userLongitude= -94.420307;
-//                                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 10, listener);
-                                    for(int i=0;i<shops.size();i++)
-                                    {
-                                        distance.add(getDistance(userLatitude,userLongitude,latitude.get(i),longitude.get(i)));
-                                    }
-                                    for(int i=0;i<shops.size();i++)
-                            {
-                                for(int j=0;j<shops.size()-i-1;j++)
-                                {
-                                    if(distance.get(j)>distance.get(j+1))
-                                    {
-                                        int tempcount=prioritycount.get(j);
-                                        prioritycount.set(j,prioritycount.get(j+1));
-                                        prioritycount.set(j+1,tempcount);
-                                        String tempshop=shops.get(j);
-                                        shops.set(j,shops.get(j+1));
-                                        shops.set(j+1,tempshop);
-                                        tempcount=count.get(j);
-                                        count.set(j,count.get(j+1));
-                                        count.set(j+1,tempcount);
-                                        tempcount=totalcost.get(j);
-                                        totalcost.set(j,totalcost.get(j+1));
-                                        totalcost.set(j+1,tempcount);
-                                        double tempcount2=distance.get(j);
-                                        distance.set(j,distance.get(j+1));
-                                        distance.set(j+1,tempcount2);
-//                                         tempcount2=rating.get(j);
-//                                        rating.set(j,rating.get(j+1));
-//                                        rating.set(j+1,tempcount2);
-//                                         tempshop=url.get(j);
-//                                        url.set(j,url.get(j+1));
-//                                        url.set(j+1,tempshop);
-                                    }
-                                }
-                            }
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            {
+//                Toast.makeText(getApplicationContext(),"hrey",Toast.LENGTH_LONG).show();
+//                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+//                        Manifest.permission.ACCESS_FINE_LOCATION)) {
+//                    showExplanation("Permission Needed", "Rationale", Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_PERMISSION);
+//                } else {
+//                    requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_PERMISSION);
+//                }
 
-                                    for (int i = 0; i < shops.size(); i++) {
+//             else {
+//                Toast.makeText(this, "Permission (already) Granted!", Toast.LENGTH_SHORT).show();
+                 // ask single or multiple permission once
 
-                                        for (int j = 0; j < shopname.size(); j++) {
-                                            if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0) {
-                                                custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j),totalcost.get(i).toString(),url.get(j)));
-                                            }
-                                        }
-                                    }
-                                    data.setAdapter(custom);
-                                    // countnumber++;
-                                }
-                            });
 
-                        }
-                    });
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
                 }
-            });
+                else
+            {
+                progressDialog = ProgressDialog.show(this,"Fetching user location","Please wait...",false,false);
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
+
+            }
+
         }
         return super.onOptionsItemSelected(item);
     }
+
+//    @Override
+//    public void onRequestPermissionsResult(
+//            int requestCode,
+//            String permissions[],
+//            int[] grantResults) {
+//        switch (requestCode) {
+//            case REQUEST_PERMISSION:
+//                if (grantResults.length > 0
+//                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    Toast.makeText(this, "Permission Granted!", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_PERMISSION);
+//                    Toast.makeText(this, "Permission Denied!", Toast.LENGTH_SHORT).show();
+//                }
+//        }
+//    }
+//
+//    private void showExplanation(String title,
+//                                 String message,
+//                                 final String permission,
+//                                 final int permissionRequestCode) {
+//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//        builder.setTitle(title)
+//                .setMessage(message)
+//                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        requestPermission(permission, permissionRequestCode);
+//                    }
+//                });
+//        builder.create().show();
+//    }
+
+//    private void requestPermission(String permissionName, int permissionRequestCode) {
+//        ActivityCompat.requestPermissions(this,
+//                new String[]{permissionName}, permissionRequestCode);
+//    }
     }
 
  interface MyCallback {

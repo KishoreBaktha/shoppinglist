@@ -10,65 +10,71 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="134dp"
-        android:layout_marginTop="109dp"
+        android:layout_alignStart="@+id/high"
+        android:layout_marginTop="132dp"
         android:text="Priority"
-        android:textSize="30sp"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="134dp" />
+        android:textColor="#222222"
+        android:textSize="24sp"
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/high"
-        android:layout_width="wrap_content"
+        android:layout_width="104dp"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="22dp"
-        android:layout_marginTop="180dp"
-        android:text="HIGH"
+        android:layout_alignStart="@+id/item"
+        android:layout_marginTop="175dp"
+        android:background="@drawable/shape"
         android:onClick="buttonhigh"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="22dp" />
+        android:text="HIGH"
+        android:textColor="#4ca448" />
 
     <Button
         android:id="@+id/medium"
-        android:layout_width="wrap_content"
+        android:layout_width="104dp"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/high"
-        android:onClick="buttonmedium"
         android:layout_centerHorizontal="true"
-        android:text="MEDIUM" />
+        android:background="@drawable/shape"
+        android:onClick="buttonmedium"
+        android:text="MEDIUM"
+        android:textColor="#4ca448" />
 
     <Button
         android:id="@+id/low"
-        android:layout_width="wrap_content"
+        android:layout_width="104dp"
         android:layout_height="wrap_content"
-        android:onClick="buttonlow"
-        android:layout_alignParentEnd="true"
         android:layout_alignTop="@+id/high"
-        android:layout_marginEnd="49dp"
-        android:text="LOW" />
+        android:layout_marginStart="9dp"
+        android:layout_toEndOf="@+id/medium"
+        android:background="@drawable/shape"
+        android:onClick="buttonlow"
+        android:text="LOW"
+        android:textColor="#4ca448" />
 
     <TextView
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/low"
-        android:layout_marginTop="20dp"
-        android:layout_centerInParent="true"
+        android:layout_height="42dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/textView"
+        android:layout_marginBottom="220dp"
         android:text="Budget"
-        android:textSize="30sp" />
+        android:textColor="#222222"
+        android:textSize="24sp"
+        android:textStyle="bold" />
 
     <EditText
         android:id="@+id/budget"
-        android:layout_width="wrap_content"
+        android:layout_width="334dp"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/textView2"
+        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
+        android:layout_marginBottom="183dp"
         android:hint="Enter amount in sek"
-        android:inputType="textPersonName" />
+        android:inputType="textPersonName"
+        android:textColor="#222222" />
 
     <Button
         android:id="@+id/button4"
@@ -76,27 +82,36 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
+        android:background="#4AC448"
         android:onClick="add"
-        android:text="Add Item" />
+        android:text="Add Item"
+        android:textColor="#ffffff"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <AutoCompleteTextView
         android:id="@+id/item"
-        android:layout_width="300dp"
+        android:layout_width="339dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="48dp"
-        android:completionHint="Enter the item title" />
+        android:layout_marginTop="65dp"
+        android:completionHint="Enter the item title"
+        android:hint="Enter an Item"
+        android:textColor="#222222" />
 
     <TextView
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="13dp"
-        android:text="Item"
-        android:textSize="30sp" />
+        android:layout_above="@+id/item"
+        android:layout_alignStart="@+id/high"
+        android:layout_marginBottom="-62dp"
+        android:hint="Enter an Item"
+        android:text="Add Items"
+        android:textColor="#222222"
+        android:textSize="32sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/date"
@@ -113,35 +128,32 @@
         android:layout_alignParentEnd="true"
         android:layout_below="@+id/textView3" />
 
-    <Button
-        android:id="@+id/button5"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:onClick="addshop"
-        android:layout_alignParentStart="true"
-        android:layout_marginBottom="83dp"
-        android:layout_marginStart="11dp"
-        android:text="ADD SHOP" />
+    <!--<Button-->
+        <!--android:id="@+id/button5"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentBottom="true"-->
+        <!--android:layout_alignStart="@+id/textView"-->
+        <!--android:layout_marginBottom="71dp"-->
+        <!--android:onClick="addshop"-->
+        <!--android:text="ADD SHOP" />-->
 
-    <Button
-        android:id="@+id/button6"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:onClick="additem2"
-        android:layout_alignParentEnd="true"
-        android:layout_marginBottom="104dp"
-        android:text="ADD ITEM" />
+    <!--<Button-->
+        <!--android:id="@+id/button6"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignEnd="@+id/item"-->
+        <!--android:layout_alignTop="@+id/button5"-->
+        <!--android:onClick="additem2"-->
+        <!--android:text="ADD ITEM" />-->
 
-    <Button
-        android:id="@+id/button9"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="view"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="91dp"
-        android:text="VIEW" />
+    <!--<Button-->
+        <!--android:id="@+id/button9"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignTop="@+id/button5"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:onClick="view"-->
+        <!--android:text="VIEW" />-->
 
 </RelativeLayout>

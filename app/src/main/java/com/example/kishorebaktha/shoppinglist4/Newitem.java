@@ -45,9 +45,9 @@ public class Newitem extends AppCompatActivity {
         high=(Button)findViewById(R.id.high);
         medium=(Button)findViewById(R.id.medium);
         low=(Button)findViewById(R.id.low);
-        high.setBackgroundColor(Color.GREEN);
-        medium.setBackgroundColor(Color.GREEN);
-        low.setBackgroundColor(Color.GREEN);
+//        high.setBackgroundColor(Color.GREEN);
+//        medium.setBackgroundColor(Color.GREEN);
+//        low.setBackgroundColor(Color.GREEN);
       // title.setTextColor(Color.RED);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_dropdown_item_1line, ITEMS);
@@ -57,25 +57,32 @@ public class Newitem extends AppCompatActivity {
     public void buttonhigh(View view) {
         priority="high";
         Toast.makeText(getApplicationContext(),"you chose high priority",Toast.LENGTH_SHORT).show();
-        high.setBackgroundColor(Color.RED);
-        low.setBackgroundColor(Color.GREEN);
-        medium.setBackgroundColor(Color.GREEN);
+        high.setBackgroundColor(Color.GREEN);
+        low.setBackgroundResource(R.drawable.shape);
+        medium.setBackgroundResource(R.drawable.shape);
+//        low.setBackgroundColor(Color.GREEN);
+//        medium.setBackgroundColor(Color.GREEN);
     }
 
-    public void buttonmedium(View view) {
+    public void buttonmedium(View view)
+    {
         priority="medium";
         Toast.makeText(getApplicationContext(),"you chose medium priority",Toast.LENGTH_SHORT).show();
-        medium.setBackgroundColor(Color.RED);
-        high.setBackgroundColor(Color.GREEN);
-        low.setBackgroundColor(Color.GREEN);
+        medium.setBackgroundColor(Color.GREEN);
+        high.setBackgroundResource(R.drawable.shape);
+        low.setBackgroundResource(R.drawable.shape);
+//        high.setBackgroundColor(Color.GREEN);
+//        low.setBackgroundColor(Color.GREEN);
     }
 
     public void buttonlow(View view) {
         priority="low";
         Toast.makeText(getApplicationContext(),"you chose low priority",Toast.LENGTH_SHORT).show();
-        low.setBackgroundColor(Color.RED);
-        high.setBackgroundColor(Color.GREEN);
-        medium.setBackgroundColor(Color.GREEN);
+        low.setBackgroundColor(Color.GREEN);
+        high.setBackgroundResource(R.drawable.shape);
+        medium.setBackgroundResource(R.drawable.shape);
+//        high.setBackgroundColor(Color.GREEN);
+//        medium.setBackgroundColor(Color.GREEN);
     }
 
     public void add(View view) {
