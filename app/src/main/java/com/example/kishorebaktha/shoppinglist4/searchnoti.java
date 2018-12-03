@@ -1,25 +1,21 @@
 package com.example.kishorebaktha.shoppinglist4;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
-import android.provider.ContactsContract;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,27 +27,18 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.firebase.ui.auth.AuthUI;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.stream.Collectors;
 
-import com.firebase.ui.storage.images.FirebaseImageLoader;
-import com.squareup.picasso.Picasso;
-import com.tbruyelle.rxpermissions2.RxPermissions;
-
-public class search extends AppCompatActivity {
+public class searchnoti extends AppCompatActivity {
     public static ListView data;
     public static customAdapter custom;
     ArrayList<Integer> budget = new ArrayList<Integer>();
@@ -88,19 +75,19 @@ public class search extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search);
-        data = (ListView) findViewById(R.id.listview);
+        setContentView(R.layout.activity_searchnoti);
+        data = (ListView) findViewById(R.id.listview2);
         custom = new customAdapter(this);
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
         if(extras != null){
-                click= Integer.parseInt(extras.getString("click"));
-            }
-            else
+            click= Integer.parseInt(extras.getString("click"));
+        }
+        else
             click=-1;
 
-       // userLatitude=Double.parseDouble(intent.getStringExtra("latitude"));
-       // userLongitude=Double.parseDouble(intent.getStringExtra("longitude"));
+        // userLatitude=Double.parseDouble(intent.getStringExtra("latitude"));
+        // userLongitude=Double.parseDouble(intent.getStringExtra("longitude"));
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         listener = new LocationListener() {
             @Override
@@ -223,7 +210,7 @@ public class search extends AppCompatActivity {
                         });
                     }
                 });
-              //  locationManager = null;
+                //  locationManager = null;
 
             }
 
@@ -354,7 +341,7 @@ public class search extends AppCompatActivity {
         {
             FirebaseDatabase.getInstance()
                     .getReference()
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("notifications")
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot)
@@ -378,10 +365,10 @@ public class search extends AppCompatActivity {
                         }
                     });
         } else
-            {
-                FirebaseDatabase.getInstance()
+        {
+            FirebaseDatabase.getInstance()
                     .getReference()
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("notifications")
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -652,7 +639,7 @@ public class search extends AppCompatActivity {
 
 //             else {
 //                Toast.makeText(this, "Permission (already) Granted!", Toast.LENGTH_SHORT).show();
-                 // ask single or multiple permission once
+                // ask single or multiple permission once
 
 
                 //    ActivityCompat#requestPermissions
@@ -661,8 +648,8 @@ public class search extends AppCompatActivity {
                 //                                          int[] grantResults)
                 // to handle the case where the user grants the permission. See the documentation
                 // for ActivityCompat#requestPermissions for more details.
-                }
-                else
+            }
+            else
             {
                 progressDialog = ProgressDialog.show(this,"Fetching user location","Please wait...",false,false);
                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
@@ -672,153 +659,14 @@ public class search extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-//    @Override
-//    public void onRequestPermissionsResult(
-//            int requestCode,
-//            String permissions[],
-//            int[] grantResults) {
-//        switch (requestCode) {
-//            case REQUEST_PERMISSION:
-//                if (grantResults.length > 0
-//                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    Toast.makeText(this, "Permission Granted!", Toast.LENGTH_SHORT).show();
-//                } else {
-//                    requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_PERMISSION);
-//                    Toast.makeText(this, "Permission Denied!", Toast.LENGTH_SHORT).show();
-//                }
-//        }
-//    }
-//
-//    private void showExplanation(String title,
-//                                 String message,
-//                                 final String permission,
-//                                 final int permissionRequestCode) {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//        builder.setTitle(title)
-//                .setMessage(message)
-//                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int id) {
-//                        requestPermission(permission, permissionRequestCode);
-//                    }
-//                });
-//        builder.create().show();
-//    }
-
-//    private void requestPermission(String permissionName, int permissionRequestCode) {
-//        ActivityCompat.requestPermissions(this,
-//                new String[]{permissionName}, permissionRequestCode);
-//    }
-    }
-
- interface MyCallback {
-    void onCallback(ArrayList<String>name,ArrayList<Integer>priority,ArrayList<Integer>budget);
-}
-interface MyCallback2 {
-    void onCallback2(ArrayList<String>name,ArrayList<Integer>cost,ArrayList<String>desc,ArrayList<String>size,ArrayList<String>shop);
-    //void onCallback2(ArrayList<String>name,ArrayList<Integer>cost,ArrayList<String>size,ArrayList<String>desc,ArrayList<String>shop);
-}
-interface MyCallback3 {
-    void onCallback3(ArrayList<String>name,ArrayList<Double>rating,ArrayList<String>timing,ArrayList<String>url);
-    //void onCallback2(ArrayList<String>name,ArrayList<Integer>cost,ArrayList<String>size,ArrayList<String>desc,ArrayList<String>shop);
-}
-interface MyCallback9 {
-    void onCallback9(Double latitude,Double longitude);
-    //void onCallback2(ArrayList<String>name,ArrayList<Integer>cost,ArrayList<String>size,ArrayList<String>desc,ArrayList<String>shop);
-}
-interface MyCallback10 {
-   void onCallback10( ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing,ArrayList<String> url,ArrayList<Double> latitude,ArrayList<Double> longitude);
-    //void onCallback2(ArrayList<String>name,ArrayList<Integer>cost,ArrayList<String>size,ArrayList<String>desc,ArrayList<String>shop);
-}
-class singleRow {
-    String shopname;
-    String count;
-   String rating;
-   String timing;
-   String totalcost;
-   String url;
-    public singleRow(String shopname,String count,String rating,String timing,String totalcost,String url) {
-
-        this.shopname = shopname;
-        this.count=count;
-        this.rating=rating;
-        this.timing=timing;
-        this.totalcost=totalcost;
-        this.url=url;
-    }
-}
-class customAdapter extends BaseAdapter {
-    ArrayList<singleRow> list;
-    String name;
-    Context c;
-
-    public customAdapter(Context context) {
-        list = new ArrayList<singleRow>();
-        c = context;
-    }
-
     @Override
-    public int getCount() {
-        return list.size();
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return list.get(position);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @Override
-    public View getView(int position, final View convertView, ViewGroup parent) {
-        LayoutInflater layoutInflater = (LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final View row = layoutInflater.inflate(R.layout.single_row, parent, false);
-        final TextView shopname = (TextView) row.findViewById(R.id.shopname2);
-        final TextView count = (TextView) row.findViewById(R.id.shopcount2);
-        final RatingBar ratingBar=(RatingBar)row.findViewById(R.id.ratingBar);
-       // final TextView rating= (TextView) row.findViewById(R.id.rating2);
-        final TextView timing = (TextView) row.findViewById(R.id.timing2);
-        final TextView totalcost = (TextView) row.findViewById(R.id.cost2);
-        final Button viewlist=(Button)row.findViewById(R.id.viewlist);
-        final Button location=(Button)row.findViewById(R.id.location);
-        final ImageView imageView=(ImageView)row.findViewById(R.id.imageView);
-        final singleRow tmp = list.get(position);
-        shopname.setText(tmp.shopname);
-        count.setText("Count: "+tmp.count);
-        ratingBar.setRating(Float.parseFloat(tmp.rating));
-      //  ratingBar.setFocusable(false);
-        //rating.setText(tmp.rating);
-        timing.setText("Timing: "+tmp.timing);
-        totalcost.setText("Total Cost:"+tmp.totalcost);
-        Picasso.with(row.getContext()).load(tmp.url).into(imageView);
-      //  Glide.with(row.getContext()).using(new FirebaseImageLoader()).load(tmp.url).into(imageView);
-        //Toast.makeText(view.getContext(), "UPDATE", Toast.LENGTH_SHORT).show();
-   viewlist.setOnClickListener(new View.OnClickListener() {
-       @Override
-       public void onClick(View view) {
-           Intent intent=new Intent(row.getContext(),ItemList.class);
-           intent.putExtra("specificitem",search.specificitem);
-           intent.putExtra("name",tmp.shopname);
-           row.getContext().startActivity(intent);
-       }
-   });
-   location.setOnClickListener(new View.OnClickListener() {
-       @Override
-       public void onClick(View view) {
-           search.searchitems9(tmp.shopname, new MyCallback9() {
-               @Override
-               public void onCallback9(Double latitude, Double longitude) {
-                   Uri gmmIntentUri = Uri.parse("google.navigation:q="+latitude.toString()+","+longitude.toString());
-                   Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                   mapIntent.setPackage("com.google.android.apps.maps");
-                   row.getContext().startActivity(mapIntent);
-               }
-           });
-       }
-   });
-        return row;
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            FirebaseDatabase.getInstance()
+                    .getReference()
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("notifications").
+                    setValue(null);
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }

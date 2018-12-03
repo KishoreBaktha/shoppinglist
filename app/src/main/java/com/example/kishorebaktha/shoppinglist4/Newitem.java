@@ -111,7 +111,7 @@ public class Newitem extends AppCompatActivity {
         }
         else
         {
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(name).push();
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(name).child("list").push();
             Map<String, Object> map = new HashMap<>();
             map.put("item", titletext);
             map.put("budget", budgettext);

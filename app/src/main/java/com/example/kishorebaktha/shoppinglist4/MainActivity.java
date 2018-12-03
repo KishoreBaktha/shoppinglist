@@ -67,7 +67,9 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.karan.churi.PermissionManager.PermissionManager;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static android.content.Context.LOCATION_SERVICE;
 
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
     private LocationManager locationManager;
     Double userLongitude, userLatitude;
     private LocationListener listener;
+    Button reminder,searchbut;
     final static int req1 = 1;
     public String a = "0";
     private RecyclerView recyclerView;
@@ -92,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseRecyclerAdapter adapter;
     int count = 0;
     int click;
-
+    int itemcount=0;
     // private FirebaseListAdapter<ListItem> Adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +103,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         recyclerView = findViewById(R.id.list);
         activity_main = (LinearLayout) findViewById(R.id.activity_main);
+        reminder=(Button)findViewById(R.id.button3);
+        searchbut=(Button)findViewById(R.id.button);
         check();
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         listener = new LocationListener() {
@@ -145,21 +150,51 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void displaydata() {
+        itemcount=0;
         permissionManager=new PermissionManager(){};
         permissionManager.checkAndRequestPermissions(this);
         linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setHasFixedSize(true);
-        // displaylist();
         final Calendar cal;
         cal = Calendar.getInstance();
         year_x = cal.get(java.util.Calendar.YEAR);
         month_x = cal.get(java.util.Calendar.MONTH);
         day_x = cal.get(java.util.Calendar.DAY_OF_MONTH);
+        FirebaseDatabase.getInstance()
+                .getReference()
+                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot)
+                    {
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren())
+                        {itemcount++;
 
+                        }
+                        if(itemcount==0)
+                        {
+                            findViewById(R.id.textView5).setVisibility(View.VISIBLE);
+                           //Toast.makeText(getApplicationContext(),"zerO",Toast.LENGTH_SHORT).show();
+                           reminder.setVisibility(View.GONE);
+                            searchbut.setVisibility(View.GONE);
+
+                        }
+                        else
+                        {
+                            findViewById(R.id.textView5).setVisibility(View.GONE);
+                            reminder.setVisibility(View.VISIBLE);
+                            searchbut.setVisibility(View.VISIBLE);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
         Query query = FirebaseDatabase.getInstance()
                 .getReference()
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
+                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list");
 
         FirebaseRecyclerOptions<ListItem> options =
                 new FirebaseRecyclerOptions.Builder<ListItem>()
@@ -182,8 +217,6 @@ public class MainActivity extends AppCompatActivity {
 
                 return new ViewHolder(view);
             }
-
-
             @Override
             protected void onBindViewHolder(final ViewHolder holder, final int position, final ListItem model) {
                 holder.setItem(model.getItem());
@@ -213,6 +246,7 @@ public class MainActivity extends AppCompatActivity {
         };
         recyclerView.setAdapter(adapter);
         adapter.startListening();
+        //Toast.makeText(getApplicationContext(),String.valueOf( itemcount),Toast.LENGTH_LONG).show();
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.DOWN | ItemTouchHelper.UP) {
 
             @Override
@@ -228,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
                 final int position = viewHolder.getAdapterPosition();
                 FirebaseDatabase.getInstance()
                         .getReference()
-                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
+                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -366,7 +400,44 @@ public class MainActivity extends AppCompatActivity {
 //              cal.set(year_x, month_x, day_x, hour_x, minute_x, 0);
                         long alarmstarttime=starttime.getTimeInMillis();
                         alarmManager.set(AlarmManager.RTC_WAKEUP,alarmstarttime,alarmintent);
+                FirebaseDatabase.getInstance()
+                        .getReference()
+                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot)
+                            {
+
+                                for (DataSnapshot snapshot : dataSnapshot.getChildren())
+                                {
+                                    Map<String, Object> map = new HashMap<>();
+                                    String name=(snapshot.child("item").getValue().toString());
+                                    int budget=(Integer.parseInt(snapshot.child("budget").getValue().toString()));
+                                    int priority;
+                                    if (snapshot.child("priority").getValue().toString().equals("high"))
+                                        priority=3;
+                                    else if (snapshot.child("priority").getValue().toString().equals("medium"))
+                                        priority=2;
+                                    else
+                                        priority=1;
+                                    map.put("item", name);
+                                    map.put("budget",budget);
+                                    map.put("priority",priority);
+                                    FirebaseDatabase.getInstance()
+                                            .getReference()
+                                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("notifications")
+                                            .push().setValue(map);
+                                }
+
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
                 Toast.makeText(getApplicationContext(), "Reminder set successfully", Toast.LENGTH_SHORT).show();
+
+
                 dialog.dismiss();
             }
         });

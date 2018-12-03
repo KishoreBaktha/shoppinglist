@@ -82,7 +82,7 @@ public class ItemList extends AppCompatActivity {
         {
             FirebaseDatabase.getInstance()
                     .getReference()
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -102,7 +102,7 @@ public class ItemList extends AppCompatActivity {
         {
             FirebaseDatabase.getInstance()
                     .getReference()
-                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString())
+                    .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {

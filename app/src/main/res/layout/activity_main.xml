@@ -2,47 +2,74 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     android:id="@+id/activity_main"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginBottom="0dp"
+    android:layout_marginTop="0dp"
     android:orientation="vertical"
+    android:paddingTop="16dp"
     tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="137dp"
+        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:text="ADD ITEMS TO LIST" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        android:background="@drawable/shape"
+        android:onClick="reminder"
+        android:padding="16dp"
+        android:text="Set Reminder"
+        android:textColor="#4ac448"
+        android:textStyle="bold" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="318dp"></android.support.v7.widget.RecyclerView>
+        android:layout_height="590dp"
+        android:paddingTop="16dp"></android.support.v7.widget.RecyclerView>
 
     <!--<ListView-->
-        <!--android:id="@+id/listView"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="600dp"-->
-        <!--android:layout_alignParentLeft="true"-->
-        <!--android:layout_alignParentStart="true"-->
-        <!--android:layout_alignParentTop="true"-->
-        <!--android:layout_marginLeft="10dp"-->
-        <!--android:layout_marginStart="10dp"-->
-        <!--android:divider="@android:color/holo_blue_bright" />-->
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_marginBottom="13dp"
-        android:onClick="additem"
-        android:text="ADD ITEM" />
+    <!--android:id="@+id/listView"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="600dp"-->
+    <!--android:layout_alignParentLeft="true"-->
+    <!--android:layout_alignParentStart="true"-->
+    <!--android:layout_alignParentTop="true"-->
+    <!--android:layout_marginLeft="10dp"-->
+    <!--android:layout_marginStart="10dp"-->
+    <!--android:divider="@android:color/holo_blue_bright" />-->
 
-    <Button
-        android:id="@+id/button3"
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/floatingActionButton3"
         android:layout_width="match_parent"
-        android:onClick="reminder"
         android:layout_height="wrap_content"
-        android:text="SET REMINDER" />
+        android:layout_gravity="center"
+        android:background="@drawable/shape"
+        android:onClick="additem"
+        app:backgroundTint="#ffffff"
+        app:srcCompat="@android:drawable/ic_input_add" />
 
     <Button
         android:id="@+id/button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#4ca448"
         android:onClick="search"
-        android:text="SEARCH" />
+        android:text="SEARCH"
+        android:textColor="#ffffff"
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
 </LinearLayout>
 <!--</RelativeLayout>-->
