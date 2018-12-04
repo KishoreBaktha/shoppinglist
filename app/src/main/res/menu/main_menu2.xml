@@ -7,4 +7,7 @@
     <item android:id="@+id/sortlocationmenu"
         android:title="Sort By Location"
         app:showAsAction="never"/>
+    <item android:id="@+id/mapview"
+        android:title="Map View"
+        app:showAsAction="never"/>
 </menu>

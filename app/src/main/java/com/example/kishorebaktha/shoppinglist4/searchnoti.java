@@ -58,6 +58,7 @@ public class searchnoti extends AppCompatActivity {
     ArrayList<Integer> count = new ArrayList<Integer>();
     ArrayList<Integer> prioritycount = new ArrayList<Integer>();
     ArrayList<String> shopname = new ArrayList<String>();
+    ArrayList<String> number = new ArrayList<String>();
     ArrayList<Double> rating = new ArrayList<Double>();
     public static final double PI = 3.14159265;
     public static final double deg2radians = PI / 180.0;
@@ -108,6 +109,7 @@ public class searchnoti extends AppCompatActivity {
                 itemname = new ArrayList<String>();
                 itemdesc = new ArrayList<String>();
                 itemcost = new ArrayList<Integer>();
+                number = new ArrayList<String>();
                 itemsize = new ArrayList<String>();
                 itemshop = new ArrayList<String>();
                 shops = new ArrayList<String>();
@@ -152,7 +154,7 @@ public class searchnoti extends AppCompatActivity {
                                 }
                                 searchitems10(new MyCallback10() {
                                     @Override
-                                    public void onCallback10(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url, ArrayList<Double> latitude2, ArrayList<Double> longitude2) {
+                                    public void onCallback10(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url, ArrayList<Double> latitude2, ArrayList<Double> longitude2,ArrayList<String> number2) {
                                         shopname = name;
                                         rating = rating;
                                         timing = timing;
@@ -160,6 +162,7 @@ public class searchnoti extends AppCompatActivity {
                                         longitude = longitude2;
                                         ArrayList<Double> distance=new ArrayList<Double>();
                                         url = url;
+                                        number=number2;
 
                                         // userLatitude=44.968046  ;
                                         //userLongitude= -94.420307;
@@ -197,7 +200,7 @@ public class searchnoti extends AppCompatActivity {
 
                                             for (int j = 0; j < shopname.size(); j++) {
                                                 if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0) {
-                                                    custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j),totalcost.get(i).toString(),url.get(j)));
+                                                    custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j),totalcost.get(i).toString(),url.get(j),number.get(i)));
                                                 }
                                             }
                                         }
@@ -300,18 +303,19 @@ public class searchnoti extends AppCompatActivity {
 
                             searchitems3(new MyCallback3() {
                                 @Override
-                                public void onCallback3(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url) {
+                                public void onCallback3(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url,ArrayList<String> number) {
                                     shopname = name;
                                     rating = rating;
                                     timing = timing;
                                     url = url;
+                                    number=number;
                                     if (countnumber == 0) {
                                         for (int i = 0; i < shops.size(); i++)
                                         {
 
                                             for (int j = 0; j < shopname.size(); j++) {
                                                 if (shops.get(i).equals(shopname.get(j)) && count.get(i) > 0) {
-                                                    custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j), totalcost.get(i).toString(), url.get(j)));
+                                                    custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j), totalcost.get(i).toString(), url.get(j),number.get(i)));
                                                 }
                                             }
                                         }
@@ -440,10 +444,11 @@ public class searchnoti extends AppCompatActivity {
                             rating.add(Double.parseDouble(snapshot.child("rating").getValue().toString()));
                             timing.add(snapshot.child("timing").getValue().toString());
                             url.add(snapshot.child("url").getValue().toString());
+                            number.add(snapshot.child("phone").getValue().toString());
                             //  }
 
                         }
-                        mycallback3.onCallback3(shopname, rating, timing, url);
+                        mycallback3.onCallback3(shopname, rating, timing, url,number);
                     }
 
                     @Override
@@ -491,11 +496,11 @@ public class searchnoti extends AppCompatActivity {
                             url.add(snapshot.child("url").getValue().toString());
                             latitude.add(Double.parseDouble(snapshot.child("latitude").getValue().toString()));
                             longitude.add(Double.parseDouble(snapshot.child("longitude").getValue().toString()));
-
+                            number.add(snapshot.child("phone").getValue().toString());
                             //  }
 
                         }
-                        mycallback10.onCallback10(shopname, rating, timing, url, latitude, longitude);
+                        mycallback10.onCallback10(shopname, rating, timing, url, latitude, longitude,number);
                     }
 
                     @Override
@@ -602,16 +607,17 @@ public class searchnoti extends AppCompatActivity {
 
                             searchitems3(new MyCallback3() {
                                 @Override
-                                public void onCallback3(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url) {
+                                public void onCallback3(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url, ArrayList<String> number2) {
                                     shopname = name;
                                     rating = rating;
                                     timing = timing;
                                     url = url;
+                                    number=number2;
                                     for (int i = 0; i < shops.size(); i++) {
 
                                         for (int j = 0; j < shopname.size(); j++) {
                                             if (shops.get(i).equals(shopname.get(j)) && count.get(i) > 0) {
-                                                custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j), totalcost.get(i).toString(), url.get(j)));
+                                                custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j), totalcost.get(i).toString(), url.get(j),number.get(i)));
                                             }
                                         }
                                     }
