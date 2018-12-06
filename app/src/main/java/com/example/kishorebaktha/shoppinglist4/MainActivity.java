@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.icu.util.Calendar;
 import android.location.Location;
 import android.location.LocationListener;
@@ -23,6 +24,7 @@ import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
@@ -38,6 +40,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -75,7 +79,7 @@ import static android.content.Context.LOCATION_SERVICE;
 
 public class MainActivity extends AppCompatActivity {
     private static int SIGN_IN_CODE = 1;
-    LinearLayout activity_main;
+    RelativeLayout activity_main;
     int year_x, month_x, day_x;
     static final int dialog_id = 0;
     static final int dialog_id2 = 1;
@@ -96,15 +100,126 @@ public class MainActivity extends AppCompatActivity {
     int count = 0;
     int click;
     int itemcount=0;
+    ArrayAdapter<String> adapter2;
     // private FirebaseListAdapter<ListItem> Adapter;
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        recyclerView = findViewById(R.id.list);
-        activity_main = (LinearLayout) findViewById(R.id.activity_main);
-        reminder=(Button)findViewById(R.id.button3);
-        searchbut=(Button)findViewById(R.id.button);
+        adapter2= new ArrayAdapter<String>(this,
+                android.R.layout.simple_dropdown_item_1line, ITEMS);
+        BottomNavigationView bottomNavigationView=(BottomNavigationView)findViewById(R.id.bottomnavigation);
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.add:
+                        Intent intent = new Intent(getApplicationContext(), Newitem.class);
+                        intent.putExtra("name", FirebaseAuth.getInstance().getCurrentUser().getUid().toString());
+                        startActivity(intent);
+                        break;
+                    case R.id.search:
+                        click = -1;
+                        Intent intent2 = new Intent(getApplicationContext(), search.class);
+                        intent2.putExtra("click", String.valueOf(click));
+                        search.specificitem = "";
+                        startActivity(intent2);
+                        break;
+                    case R.id.reminder:
+                        final Dialog dialog = new Dialog(MainActivity.this);
+                        dialog.setContentView(R.layout.reminder);
+                        dialog.setTitle("REMINDER");
+                        Button btndate = (Button) dialog.findViewById(R.id.datebutton);
+                        Button btntime = (Button) dialog.findViewById(R.id.timebutton);
+                        Button set = (Button) dialog.findViewById(R.id.set);
+                        datetext = dialog.findViewById(R.id.datetext);
+                        timetext = dialog.findViewById(R.id.timetext);
+                        btndate.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                showDialog(dialog_id2);
+                            }
+                        });
+                        btntime.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                showDialog(dialog_id);
+                            }
+                        });
+                        set.setOnClickListener(new View.OnClickListener() {
+                            @RequiresApi(api = Build.VERSION_CODES.N)
+                            @Override
+                            public void onClick(View view) {
+                                Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
+                                intent.putExtra("notificationid", notificationid);
+                                intent.putExtra("todo", "PURCHASE YOUR ITEMS IN THE LIST");
+                                PendingIntent alarmintent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                                AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+                                int hour = hour_x;
+                                int minute = minute_x;
+                                java.util.Calendar starttime = java.util.Calendar.getInstance();
+                                starttime.set(java.util.Calendar.DAY_OF_MONTH, day_x);
+                                starttime.set(java.util.Calendar.MONTH, month_x - 1);
+                                starttime.set(java.util.Calendar.YEAR, year_x);
+                                starttime.set(java.util.Calendar.HOUR_OF_DAY, hour);
+                                starttime.set(java.util.Calendar.MINUTE, minute);
+                                starttime.set(java.util.Calendar.SECOND, 0);
+                                long alarmstarttime = starttime.getTimeInMillis();
+                                alarmManager.set(AlarmManager.RTC_WAKEUP, alarmstarttime, alarmintent);
+                                FirebaseDatabase.getInstance()
+                                        .getReference()
+                                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
+                                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                                    Map<String, Object> map = new HashMap<>();
+                                                    String name = (snapshot.child("item").getValue().toString());
+                                                    int budget = (Integer.parseInt(snapshot.child("budget").getValue().toString()));
+                                                    int priority;
+                                                    if (snapshot.child("priority").getValue().toString().equals("high"))
+                                                        priority = 5;
+                                                    else if (snapshot.child("priority").getValue().toString().equals("medium"))
+                                                        priority = 3;
+                                                    else
+                                                        priority = 1;
+                                                    map.put("item", name);
+                                                    map.put("budget", budget);
+                                                    map.put("priority", priority);
+                                                    FirebaseDatabase.getInstance()
+                                                            .getReference()
+                                                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("notifications")
+                                                            .push().setValue(map);
+                                                }
+
+                                            }
+
+                                            @Override
+                                            public void onCancelled(DatabaseError databaseError) {
+                                            }
+                                        });
+                                Toast.makeText(getApplicationContext(), "Reminder set successfully", Toast.LENGTH_SHORT).show();
+
+
+                                dialog.dismiss();
+                            }
+                        });
+                        // set width for dialog
+                        int width = (int) (MainActivity.this.getResources().getDisplayMetrics().widthPixels * 0.95);
+                        // set height for dialog
+                        int height = (int) (MainActivity.this.getResources().getDisplayMetrics().heightPixels * 0.7);
+                        dialog.getWindow().setLayout(width, height);
+                        dialog.show();
+                        break;
+                }
+                return true;
+            }
+        });
+
+            recyclerView = findViewById(R.id.list);
+        activity_main = (RelativeLayout) findViewById(R.id.activity_main);
         check();
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         listener = new LocationListener() {
@@ -161,37 +276,6 @@ public class MainActivity extends AppCompatActivity {
         year_x = cal.get(java.util.Calendar.YEAR);
         month_x = cal.get(java.util.Calendar.MONTH);
         day_x = cal.get(java.util.Calendar.DAY_OF_MONTH);
-        FirebaseDatabase.getInstance()
-                .getReference()
-                .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot)
-                    {
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren())
-                        {itemcount++;
-
-                        }
-                        if(itemcount==0)
-                        {
-                            findViewById(R.id.textView5).setVisibility(View.VISIBLE);
-                           //Toast.makeText(getApplicationContext(),"zerO",Toast.LENGTH_SHORT).show();
-                           reminder.setVisibility(View.GONE);
-                            searchbut.setVisibility(View.GONE);
-
-                        }
-                        else
-                        {
-                            findViewById(R.id.textView5).setVisibility(View.GONE);
-                            reminder.setVisibility(View.VISIBLE);
-                            searchbut.setVisibility(View.VISIBLE);
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
         Query query = FirebaseDatabase.getInstance()
                 .getReference()
                 .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list");
@@ -228,17 +312,194 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(View view) {
                         progressDialog = ProgressDialog.show(view.getContext(),"Sending request","Please wait...",false,false);
                         click = position;
-//                            userLongitude =18.06451842;
-//                            userLatitude =59.36944417;
-                        // locationManager.removeUpdates(listener);
-                        //locationManager = null;
                         Intent intent = new Intent(getApplicationContext(), search.class);
-//                            intent.putExtra("latitude", userLatitude.toString());
-//                            intent.putExtra("longitude", userLongitude.toString());
                         intent.putExtra("click", String.valueOf(click));
                         progressDialog.dismiss();
                         search.specificitem="";
                         startActivity(intent);
+                    }
+                });
+                holder.root.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View view) {
+                        final String[] priority = new String[1];
+                        final Dialog dialog = new Dialog(MainActivity.this);
+                        dialog.setContentView(R.layout.itemupdate);
+                        dialog.setTitle("UPDATE");
+                        final AutoCompleteTextView item = (AutoCompleteTextView) dialog.findViewById(R.id.item2);
+                        final Button high2 = (Button) dialog.findViewById(R.id.high2);
+                        final Button medium2 = (Button) dialog.findViewById(R.id.medium2);
+                        final Button low2 = (Button) dialog.findViewById(R.id.low2);
+                        final EditText budget2=(EditText)dialog.findViewById(R.id.budget3);
+                        final Button update = (Button) dialog.findViewById(R.id.update);
+                        budget2.setText(model.getBudget());
+                        if(model.getPriority().equals("high"))
+                        {
+                            high2.setBackgroundColor(Color.GREEN);
+                            priority[0] ="high";
+                        }
+                        else if(model.getPriority().equals("medium"))
+                        {
+                            medium2.setBackgroundColor(Color.GREEN);
+                            priority[0] ="medium";
+                        }
+
+                        else if(model.getPriority().equals("low"))
+                        {
+                            low2.setBackgroundColor(Color.GREEN);
+                            priority[0] ="low";
+                        }
+
+                        item.setAdapter(adapter2);
+                        item.setText(model.getItem());
+                        item.setFocusable(true);
+                         high2.setOnClickListener(new View.OnClickListener() {
+                             @Override
+                             public void onClick(View view) {
+                                 priority[0] ="high";
+                                 Toast.makeText(getApplicationContext(),"Clicked",Toast.LENGTH_SHORT).show();
+                                 high2.setBackgroundColor(Color.GREEN);
+                                 low2.setBackgroundResource(R.drawable.shape);
+                                 medium2.setBackgroundResource(R.drawable.shape);
+                             }
+                         });
+                        medium2.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                priority[0] ="medium";
+                                Toast.makeText(getApplicationContext(),"Clicked Medium",Toast.LENGTH_SHORT).show();
+                                medium2.setBackgroundColor(Color.GREEN);
+                                high2.setBackgroundResource(R.drawable.shape);
+                                low2.setBackgroundResource(R.drawable.shape);
+                            }
+                        });
+                        low2.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                priority[0] ="low";
+                                Toast.makeText(getApplicationContext(),"Clicked",Toast.LENGTH_SHORT).show();
+                                low2.setBackgroundColor(Color.GREEN);
+                                high2.setBackgroundResource(R.drawable.shape);
+                                medium2.setBackgroundResource(R.drawable.shape);
+                            }
+                        });
+                            update.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    FirebaseDatabase.getInstance()
+                                            .getReference()
+                                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
+                                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                                @Override
+                                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                                        if (position == count) {
+                                                            snapshot.getRef().removeValue();
+                                                            //  Toast.makeText(getApplicationContext(), "Deleted", Toast.LENGTH_SHORT).show();
+                                                            RecyclerView.Adapter adapter = recyclerView.getAdapter();
+                                                            recyclerView.setAdapter(null);
+                                                            recyclerView.setAdapter(adapter);
+                                                            dialog.dismiss();
+                                                            break;
+                                                        }
+                                                        count++;
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onCancelled(DatabaseError databaseError) {
+                                                }
+                                            });
+                                    count = 0;click=0;
+                                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list").push();
+                                    Map<String, Object> map = new HashMap<>();
+                                    map.put("item", item.getText().toString());
+                                    map.put("budget", budget2.getText().toString());
+                                    map.put("priority",priority[0]);
+                                    databaseReference.setValue(map);
+                                    Toast.makeText(getApplicationContext(),"UPDATED SUCCESSFULLY",Toast.LENGTH_SHORT).show();
+                                }
+                            });
+//                        datetext = dialog.findViewById(R.id.datetext);
+//                        timetext = dialog.findViewById(R.id.timetext);
+//                        btndate.setOnClickListener(new View.OnClickListener() {
+//                            @Override
+//                            public void onClick(View view) {
+//                                showDialog(dialog_id2);
+//                            }
+//                        });
+//                        btntime.setOnClickListener(new View.OnClickListener() {
+//                            @Override
+//                            public void onClick(View view) {
+//                                showDialog(dialog_id);
+//                            }
+//                        });
+//                        set.setOnClickListener(new View.OnClickListener() {
+//                            @RequiresApi(api = Build.VERSION_CODES.N)
+//                            @Override
+//                            public void onClick(View view) {
+//                                Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
+//                                intent.putExtra("notificationid", notificationid);
+//                                intent.putExtra("todo", "PURCHASE YOUR ITEMS IN THE LIST");
+//                                PendingIntent alarmintent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+//                                AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+//                                int hour = hour_x;
+//                                int minute = minute_x;
+//                                java.util.Calendar starttime = java.util.Calendar.getInstance();
+//                                starttime.set(java.util.Calendar.DAY_OF_MONTH, day_x);
+//                                starttime.set(java.util.Calendar.MONTH, month_x - 1);
+//                                starttime.set(java.util.Calendar.YEAR, year_x);
+//                                starttime.set(java.util.Calendar.HOUR_OF_DAY, hour);
+//                                starttime.set(java.util.Calendar.MINUTE, minute);
+//                                starttime.set(java.util.Calendar.SECOND, 0);
+//                                long alarmstarttime = starttime.getTimeInMillis();
+//                                alarmManager.set(AlarmManager.RTC_WAKEUP, alarmstarttime, alarmintent);
+//                                FirebaseDatabase.getInstance()
+//                                        .getReference()
+//                                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
+//                                        .addListenerForSingleValueEvent(new ValueEventListener() {
+//                                            @Override
+//                                            public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                                                    Map<String, Object> map = new HashMap<>();
+//                                                    String name = (snapshot.child("item").getValue().toString());
+//                                                    int budget = (Integer.parseInt(snapshot.child("budget").getValue().toString()));
+//                                                    int priority;
+//                                                    if (snapshot.child("priority").getValue().toString().equals("high"))
+//                                                        priority = 5;
+//                                                    else if (snapshot.child("priority").getValue().toString().equals("medium"))
+//                                                        priority = 3;
+//                                                    else
+//                                                        priority = 1;
+//                                                    map.put("item", name);
+//                                                    map.put("budget", budget);
+//                                                    map.put("priority", priority);
+//                                                    FirebaseDatabase.getInstance()
+//                                                            .getReference()
+//                                                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("notifications")
+//                                                            .push().setValue(map);
+//                                                }
+//
+//                                            }
+//
+//                                            @Override
+//                                            public void onCancelled(DatabaseError databaseError) {
+//                                            }
+//                                        });
+//                                Toast.makeText(getApplicationContext(), "Reminder set successfully", Toast.LENGTH_SHORT).show();
+//
+//
+//                                dialog.dismiss();
+//                            }
+//                        });
+//                        // set width for dialog
+                        int width = (int) (MainActivity.this.getResources().getDisplayMetrics().widthPixels * 0.95);
+                        // set height for dialog
+                        int height = (int) (MainActivity.this.getResources().getDisplayMetrics().heightPixels * 0.7);
+                        dialog.getWindow().setLayout(width, height);
+                        dialog.show();
+                        return false;
                     }
                 });
             }
@@ -246,8 +507,8 @@ public class MainActivity extends AppCompatActivity {
         };
         recyclerView.setAdapter(adapter);
         adapter.startListening();
-        //Toast.makeText(getApplicationContext(),String.valueOf( itemcount),Toast.LENGTH_LONG).show();
-        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.DOWN | ItemTouchHelper.UP) {
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT | ItemTouchHelper.DOWN | ItemTouchHelper.UP)
+        {
 
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
@@ -284,22 +545,16 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                 count = 0;click=0;
-                //adapter.notifyItemRemoved(position);
-                // recyclerView.getAdapter().notifyDataSetChanged();
             }
+
         };
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
         itemTouchHelper.attachToRecyclerView(recyclerView);
-        //displaylist();
-        // Snackbar.make(activity_main,"Welcome"+FirebaseAuth.getInstance().getCurrentUser().getEmail(),Snackbar.LENGTH_SHORT).show();
-        //load content
     }
-//    public void onRequestPermissionsResult(int requestCode,String permissions[], int[] grantResults) {
-//        permissionManager.checkResult(requestCode,permissions, grantResults);
-//
-//    }
 
-
+    private static final String[] ITEMS = new String[] {
+            "jacket", "coat", "socks", "shirt", "sweater"
+    };
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SIGN_IN_CODE && resultCode == RESULT_OK) {
@@ -343,10 +598,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         if (adapter!=null)
             adapter.startListening();
-//        if(adapter!=null)
-//            adapter.startListening();
-//        if (FirebaseAuth.getInstance().getCurrentUser() != null)
-//            adapter.startListening();
     }
 
 
@@ -355,98 +606,6 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         if (adapter!=null)
             adapter.stopListening();
-    }
-
-    public void reminder(View view) {
-        final Dialog dialog = new Dialog(this);
-        dialog.setContentView(R.layout.reminder);
-        dialog.setTitle("REMINDER");
-        Button btndate = (Button) dialog.findViewById(R.id.datebutton);
-        Button btntime = (Button) dialog.findViewById(R.id.timebutton);
-        Button set = (Button) dialog.findViewById(R.id.set);
-        datetext = dialog.findViewById(R.id.datetext);
-        timetext = dialog.findViewById(R.id.timetext);
-        btndate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showDialog(dialog_id2);
-            }
-        });
-        btntime.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showDialog(dialog_id);
-            }
-        });
-        set.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onClick(View view) {
-                Intent intent=new Intent(MainActivity.this,AlarmReceiver.class);
-                intent.putExtra("notificationid",notificationid);
-                intent.putExtra("todo","PURCHASE YOUR ITEMS IN THE LIST");
-                PendingIntent alarmintent=PendingIntent.getBroadcast(MainActivity.this,0,intent,PendingIntent.FLAG_CANCEL_CURRENT);
-                AlarmManager alarmManager=(AlarmManager)getSystemService(ALARM_SERVICE);
-                        int hour=hour_x;
-                        int minute=minute_x;
-                        java.util.Calendar starttime= java.util.Calendar.getInstance();
-                        starttime.set(java.util.Calendar.DAY_OF_MONTH,day_x);
-                        starttime.set(java.util.Calendar.MONTH,month_x-1);
-                        starttime.set(java.util.Calendar.YEAR,year_x);
-                        starttime.set(java.util.Calendar.HOUR_OF_DAY,hour);
-                        starttime.set(java.util.Calendar.MINUTE,minute);
-                        starttime.set(java.util.Calendar.SECOND,0);
-//                java.util.Calendar cal = java.util.Calendar.getInstance();
-//              cal.set(year_x, month_x, day_x, hour_x, minute_x, 0);
-                        long alarmstarttime=starttime.getTimeInMillis();
-                        alarmManager.set(AlarmManager.RTC_WAKEUP,alarmstarttime,alarmintent);
-                FirebaseDatabase.getInstance()
-                        .getReference()
-                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("list")
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot)
-                            {
-
-                                for (DataSnapshot snapshot : dataSnapshot.getChildren())
-                                {
-                                    Map<String, Object> map = new HashMap<>();
-                                    String name=(snapshot.child("item").getValue().toString());
-                                    int budget=(Integer.parseInt(snapshot.child("budget").getValue().toString()));
-                                    int priority;
-                                    if (snapshot.child("priority").getValue().toString().equals("high"))
-                                        priority=3;
-                                    else if (snapshot.child("priority").getValue().toString().equals("medium"))
-                                        priority=2;
-                                    else
-                                        priority=1;
-                                    map.put("item", name);
-                                    map.put("budget",budget);
-                                    map.put("priority",priority);
-                                    FirebaseDatabase.getInstance()
-                                            .getReference()
-                                            .child(FirebaseAuth.getInstance().getCurrentUser().getUid().toString()).child("notifications")
-                                            .push().setValue(map);
-                                }
-
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-                            }
-                        });
-                Toast.makeText(getApplicationContext(), "Reminder set successfully", Toast.LENGTH_SHORT).show();
-
-
-                dialog.dismiss();
-            }
-        });
-        // set width for dialog
-        int width = (int) (this.getResources().getDisplayMetrics().widthPixels * 0.95);
-        // set height for dialog
-        int height = (int) (this.getResources().getDisplayMetrics().heightPixels * 0.7);
-        dialog.getWindow().setLayout(width, height);
-        dialog.show();
     }
 
     @Override
@@ -486,17 +645,11 @@ public class MainActivity extends AppCompatActivity {
 //            //                                          int[] grantResults)
 //            // to handle the case where the user grants the permission. See the documentation
 //            // for ActivityCompat#requestPermissions for more details.
-//            return;
+          //  return;
 //        }
         click=-1;
         progressDialog = ProgressDialog.show(this,"Sending request","Please wait...",false,false);
-//        userLongitude =18.06451842;
-//        userLatitude =59.36944417;
-       // locationManager.removeUpdates(listener);
-        //locationManager = null;
         Intent intent = new Intent(getApplicationContext(), search.class);
-//        intent.putExtra("latitude", userLatitude.toString());
-//        intent.putExtra("longitude", userLongitude.toString());
         intent.putExtra("click", String.valueOf(click));
         progressDialog.dismiss();
         search.specificitem="";

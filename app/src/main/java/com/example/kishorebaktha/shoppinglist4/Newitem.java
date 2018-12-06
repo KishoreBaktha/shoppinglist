@@ -107,7 +107,6 @@ public class Newitem extends AppCompatActivity {
                     ///do what you want the click to do
                 }
             });
-          //  if(title.getText().toString().trim().length()==0)
         }
         else
         {
@@ -121,59 +120,8 @@ public class Newitem extends AppCompatActivity {
             Intent intent1=new Intent(getApplicationContext(),MainActivity.class);
             startActivity(intent1);
         }
-        //Toast.makeText(getApplicationContext(),name,Toast.LENGTH_SHORT).show();
-
-
-//        FirebaseDatabase.getInstance().getReference().child(name).push().setValue(new ListItem(titletext,budgettext,priority )  ).addOnCompleteListener(new OnCompleteListener<Void>() {
-//            @Override
-//            public void onComplete(@NonNull Task<Void> task)
-//            {
-//                if(task.isSuccessful())
-//                {
-//                    Toast.makeText(getApplicationContext(),"SUCCESS",Toast.LENGTH_SHORT).show();
-//                    Intent intent1=new Intent(getApplicationContext(),MainActivity.class);
-//                    startActivity(intent1);
-//                }
-//
-//                else
-//                    Toast.makeText(getApplicationContext(),"ERROR",Toast.LENGTH_SHORT).show();
-//            }
-//        });;
     }
     private static final String[] ITEMS = new String[] {
             "jacket", "coat", "socks", "shirt", "sweater"
     };
-
-    public void addshop(View view) {
-        final Intent intent=getIntent();
-        String name=intent.getStringExtra("name");
-        Intent intent2=new Intent(getApplicationContext(),addshop.class);
-        intent2.putExtra("name",name);
-        startActivity(intent2);
-    }
-
-    public void additem2(View view) {
-        Intent intent=new Intent(getApplicationContext(),additem.class);
-        startActivity(intent);
-    }
-
-    public void view(View view) {
-        FirebaseDatabase.getInstance()
-                .getReference()
-                .child("items")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-
-                            Toast.makeText(getApplicationContext(), snapshot.child("name").getValue().toString(), Toast.LENGTH_LONG).show();
-                            break;
-                        }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
-
-    }
 }

@@ -47,8 +47,6 @@
         </activity>
         <activity android:name=".MapsActivity" />
         <activity android:name=".Newitem" />
-        <activity android:name=".addshop" />
-        <activity android:name=".additem" />
         <activity android:name=".search" />
         <activity android:name=".ItemList" />
 

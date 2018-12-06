@@ -23,6 +23,7 @@ dependencies {
     implementation 'com.android.support:appcompat-v7:27.0.2'
     implementation 'com.google.firebase:firebase-core:16.0.5'
     implementation 'com.github.tbruyelle:rxpermissions:0.10.1'
+    implementation 'com.android.support:design:27.0.2'
     implementation 'com.jakewharton.rxbinding2:rxbinding:2.1.1'
     implementation 'com.github.karanchuri:PermissionManager:0.1.0'
     implementation 'com.google.android.gms:play-services-maps:16.0.0'

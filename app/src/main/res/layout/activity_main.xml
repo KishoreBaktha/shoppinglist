@@ -1,41 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginBottom="0dp"
-    android:layout_marginTop="0dp"
     android:orientation="vertical"
-    android:paddingTop="16dp"
     tools:context=".MainActivity">
 
     <TextView
         android:id="@+id/textView5"
-        android:layout_width="137dp"
-        android:layout_gravity="center"
-        android:layout_height="wrap_content"
-        android:text="ADD ITEMS TO LIST" />
-
-    <Button
-        android:id="@+id/button3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginLeft="0dp"
-        android:layout_marginRight="0dp"
-        android:background="@drawable/shape"
-        android:onClick="reminder"
-        android:padding="16dp"
-        android:text="Set Reminder"
-        android:textColor="#4ac448"
-        android:textStyle="bold" />
+        android:layout_alignParentTop="true"
+        android:textSize="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center"
+        android:text=" LIST" />
+
+    <!--<Button-->
+        <!--android:id="@+id/button3"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignBottom="@+id/floatingActionButton3"-->
+        <!--android:layout_alignParentStart="true"-->
+        <!--android:layout_gravity="end"-->
+        <!--android:background="@drawable/shape"-->
+        <!--android:onClick="reminder"-->
+        <!--android:padding="16dp"-->
+        <!--android:text="Set Reminder"-->
+        <!--android:textColor="#4ac448"-->
+        <!--android:textStyle="bold" />-->
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="590dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="65dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
         android:paddingTop="16dp"></android.support.v7.widget.RecyclerView>
 
     <!--<ListView-->
@@ -50,27 +54,44 @@
     <!--android:divider="@android:color/holo_blue_bright" />-->
 
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/floatingActionButton3"
+    <!--<android.support.design.widget.FloatingActionButton-->
+        <!--android:id="@+id/floatingActionButton3"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_above="@+id/button"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:layout_gravity="center"-->
+        <!--android:background="@drawable/shape"-->
+        <!--android:onClick="additem"-->
+        <!--app:backgroundTint="#ffffff"-->
+        <!--app:srcCompat="@android:drawable/ic_input_add" />-->
+
+    <!--<Button-->
+        <!--android:id="@+id/button"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentBottom="true"-->
+        <!--android:layout_alignParentStart="true"-->
+        <!--android:layout_marginBottom="93dp"-->
+        <!--android:background="#4ca448"-->
+        <!--android:onClick="search"-->
+        <!--android:text="SEARCH"-->
+        <!--android:textColor="#ffffff"-->
+        <!--android:textSize="16sp"-->
+        <!--android:textStyle="bold" />-->
+
+    <android.support.design.widget.BottomNavigationView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:background="@drawable/shape"
-        android:onClick="additem"
-        app:backgroundTint="#ffffff"
-        app:srcCompat="@android:drawable/ic_input_add" />
+        android:id="@+id/bottomnavigation"
+        android:background="@color/colorPrimaryDark"
+        android:layout_marginTop="80dp"
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#4ca448"
-        android:onClick="search"
-        android:text="SEARCH"
-        android:textColor="#ffffff"
-        android:textSize="16sp"
-        android:textStyle="bold" />
-
-</LinearLayout>
+        android:layout_alignParentBottom="true"
+        app:itemIconTint="@color/white"
+        app:itemTextColor="@color/white"
+        app:menu="@menu/navigation"
+        />
+</RelativeLayout>
 <!--</RelativeLayout>-->
 <!--</ScrollView>-->

@@ -17,6 +17,7 @@ import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -99,9 +100,213 @@ public class search extends AppCompatActivity {
             }
             else
             click=-1;
+        BottomNavigationView bottomNavigationView=(BottomNavigationView)findViewById(R.id.bottomnavigation2);
+        bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.price:
+                        custom.list.clear();
+                        //countnumber=0;
+                        count = new ArrayList<Integer>();
+                        prioritycount = new ArrayList<Integer>();
+                        totalcost = new ArrayList<Integer>();
+                        name = new ArrayList<String>();
+                        budget = new ArrayList<Integer>();
+                        priority = new ArrayList<Integer>();
+                        itemname = new ArrayList<String>();
+                        itemdesc = new ArrayList<String>();
+                        itemcost = new ArrayList<Integer>();
+                        itemsize = new ArrayList<String>();
+                        number = new ArrayList<String>();
+                        itemshop = new ArrayList<String>();
+                        shops = new ArrayList<String>();
+                        shopname = new ArrayList<String>();
+                        previtems=new ArrayList<String>();
+                        countposition=0;
+                        searchitems(new MyCallback() {
+                            @Override
+                            public void onCallback(ArrayList<String> name2, ArrayList<Integer> priority2, final ArrayList<Integer> budget2) {
+                                name = name2;
+                                budget = budget2;
+                                priority = priority2;
+                                searchitems2(new MyCallback2() {
+                                    @RequiresApi(api = Build.VERSION_CODES.N)
+                                    @Override
+                                    public void onCallback2(ArrayList<String> name2, ArrayList<Integer> cost, ArrayList<String> desc, ArrayList<String> size, ArrayList<String> shop) {
+                                        itemname = name2;
+                                        itemcost = cost;
+                                        itemdesc = desc;
+                                        itemsize = size;
+                                        itemshop = shop;
+                                        shops = new ArrayList<String>(new LinkedHashSet<String>(itemshop));
+                                        for (int i = 0; i < shops.size(); i++) {
+                                            count.add(0);
+                                            prioritycount.add(0);
+                                            totalcost.add(0);
+                                        }
+                                        for (int i = 0; i < shops.size(); i++) {
+                                            previtems=new ArrayList<String>();
+                                            for (int j = 0; j < itemname.size(); j++) {
+                                                if (itemshop.get(j).equals(shops.get(i))) {
+                                                    for (int m = 0; m < name.size(); m++) {
+                                                        if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)&&!previtems.contains(name.get(m))) {
+                                                            previtems.add(name.get(m));
+                                                            totalcost.set(i, totalcost.get(i) + itemcost.get(j));
+                                                            prioritycount.set(i, prioritycount.get(i) + priority.get(m));
+                                                            // Toast.makeText(getApplicationContext(),priority.get(m).toString(),Toast.LENGTH_LONG).show();
+                                                            count.set(i, count.get(i) + 1);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        for (int i = 0; i < shops.size(); i++) {
+                                            for (int j = 0; j < shops.size() - i - 1; j++) {
+                                                if (totalcost.get(j) > totalcost.get(j + 1)) {
+                                                    int tempcount = prioritycount.get(j);
+                                                    prioritycount.set(j, prioritycount.get(j + 1));
+                                                    prioritycount.set(j + 1, tempcount);
+                                                    String tempshop = shops.get(j);
+                                                    shops.set(j, shops.get(j + 1));
+                                                    shops.set(j + 1, tempshop);
+                                                    tempcount = count.get(j);
+                                                    count.set(j, count.get(j + 1));
+                                                    count.set(j + 1, tempcount);
+                                                    tempcount = totalcost.get(j);
+                                                    totalcost.set(j, totalcost.get(j + 1));
+                                                    totalcost.set(j + 1, tempcount);
+                                                }
+                                            }
+                                        }
 
-       // userLatitude=Double.parseDouble(intent.getStringExtra("latitude"));
-       // userLongitude=Double.parseDouble(intent.getStringExtra("longitude"));
+                                        searchitems3(new MyCallback3() {
+                                            @Override
+                                            public void onCallback3(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url,ArrayList<String> number) {
+                                                shopname = name;
+                                                rating = rating;
+                                                timing = timing;
+                                                url = url;
+                                                number=number;
+                                                for (int i = 0; i < shops.size(); i++) {
+
+                                                    for (int j = 0; j < shopname.size(); j++) {
+                                                        if (shops.get(i).equals(shopname.get(j)) && count.get(i) > 0) {
+                                                            custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j), totalcost.get(i).toString(), url.get(j),number.get(i)));
+                                                        }
+                                                    }
+                                                }
+                                                data.setAdapter(custom);
+                                                // countnumber++;
+                                            }
+                                        });
+
+                                    }
+                                });
+                            }
+                        });
+                        break;
+                    case R.id.location:
+                        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                        {
+
+                        }
+                        else
+                        {
+                            progressDialog = ProgressDialog.show(search.this,"Fetching user location","Please wait...",false,false);
+                            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
+
+                        }
+                        break;
+                    case R.id.mapview:
+                        final ArrayList<String> shoplist=new ArrayList<String>();
+                        countposition=0;
+                        count = new ArrayList<Integer>();
+                        prioritycount = new ArrayList<Integer>();
+                        totalcost = new ArrayList<Integer>();
+                        name = new ArrayList<String>();
+                        budget = new ArrayList<Integer>();
+                        priority = new ArrayList<Integer>();
+                        itemname = new ArrayList<String>();
+                        itemdesc = new ArrayList<String>();
+                        itemcost = new ArrayList<Integer>();
+                        itemsize = new ArrayList<String>();
+                        itemshop = new ArrayList<String>();
+                        shops = new ArrayList<String>();
+                        number = new ArrayList<String>();
+                        previtems=new ArrayList<String>();
+                        shopname = new ArrayList<String>();
+                        searchitems(new MyCallback() {
+                            @Override
+                            public void onCallback(ArrayList<String> name2, ArrayList<Integer> priority2, final ArrayList<Integer> budget2) {
+                                name = name2;
+                                budget = budget2;
+                                priority = priority2;
+                                searchitems2(new MyCallback2() {
+                                    @RequiresApi(api = Build.VERSION_CODES.N)
+                                    @Override
+                                    public void onCallback2(ArrayList<String> name2, ArrayList<Integer> cost, ArrayList<String> desc, ArrayList<String> size, final ArrayList<String> shop) {
+                                        itemname = name2;
+                                        itemcost = cost;
+                                        itemdesc = desc;
+                                        itemsize = size;
+                                        itemshop = shop;
+                                        shops = new ArrayList<String>(new LinkedHashSet<String>(itemshop));
+                                        for (int i = 0; i < shops.size(); i++) {
+                                            count.add(0);
+                                            prioritycount.add(0);
+                                            totalcost.add(0);
+                                        }
+                                        for (int i = 0; i < shops.size(); i++) {
+                                            previtems=new ArrayList<String>();
+                                            for (int j = 0; j < itemname.size(); j++) {
+                                                if (itemshop.get(j).equals(shops.get(i))) {
+                                                    for (int m = 0; m < name.size(); m++) {
+                                                        if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)&&!previtems.contains(name.get(m))) {
+                                                            previtems.add(name.get(m));
+                                                            totalcost.set(i, totalcost.get(i) + itemcost.get(j));
+                                                            prioritycount.set(i, prioritycount.get(i) + priority.get(m));
+                                                            // Toast.makeText(getApplicationContext(),priority.get(m).toString(),Toast.LENGTH_LONG).show();
+                                                            count.set(i, count.get(i) + 1);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        searchitems10(new MyCallback10() {
+                                            @Override
+                                            public void onCallback10(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url, ArrayList<Double> latitude2, ArrayList<Double> longitude2,ArrayList<String> number2) {
+                                                shopname = name;
+                                                for (int i = 0; i < shops.size(); i++) {
+
+                                                    for (int j = 0; j < shopname.size(); j++) {
+                                                        if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0) {
+                                                            shoplist.add(shops.get(i));
+                                                        }
+                                                    }
+                                                }
+                                                //  Toast.makeText(getApplicationContext(),shoplist.get(3),Toast.LENGTH_LONG).show();
+                                                if(countnumber==1)
+                                                {
+                                                    Intent intent=new Intent(getApplicationContext(),MapsActivity.class);
+                                                    intent.putStringArrayListExtra("shopname",shoplist);
+                                                    getApplicationContext().startActivity(intent);
+                                                }
+
+
+                                            }
+                                        });
+
+                                    }
+                                });
+                            }
+                        });
+                        break;
+                }
+                return true;
+            }
+        });
+
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         listener = new LocationListener() {
             @Override
@@ -137,7 +342,7 @@ public class search extends AppCompatActivity {
                         searchitems2(new MyCallback2() {
                             @RequiresApi(api = Build.VERSION_CODES.N)
                             @Override
-                            public void onCallback2(ArrayList<String> name2, ArrayList<Integer> cost, ArrayList<String> desc, ArrayList<String> size, ArrayList<String> shop) {
+                            public void onCallback2(ArrayList<String> name2, ArrayList<Integer> cost, ArrayList<String> desc, ArrayList<String> size, final ArrayList<String> shop) {
                                 itemname = name2;
                                 itemcost = cost;
                                 itemdesc = desc;
@@ -182,7 +387,14 @@ public class search extends AppCompatActivity {
 
                                         for(int i=0;i<shops.size();i++)
                                         {
-                                            distance.add(getDistance(userLatitude,userLongitude,latitude.get(i),longitude.get(i)));
+                                            for(int j=0;j<latitude.size();j++)
+                                            {
+                                                if(shops.get(i).equals(shopname.get(j)))
+                                                {
+                                                    distance.add(getDistance(userLatitude,userLongitude,latitude.get(j),longitude.get(j)));
+                                                }
+                                            }
+
                                         }
                                         for(int i=0;i<shops.size();i++)
                                         {
@@ -368,9 +580,9 @@ public class search extends AppCompatActivity {
                                 name.add(snapshot.child("item").getValue().toString());
                                 budget.add(Integer.parseInt(snapshot.child("budget").getValue().toString()));
                                 if (snapshot.child("priority").getValue().toString().equals("high"))
-                                    priority.add(3);
+                                    priority.add(5);
                                 else if (snapshot.child("priority").getValue().toString().equals("medium"))
-                                    priority.add(2);
+                                    priority.add(3);
                                 else
                                     priority.add(1);
                             }
@@ -395,9 +607,9 @@ public class search extends AppCompatActivity {
                                     name.add(snapshot.child("item").getValue().toString());
                                     budget.add(Integer.parseInt(snapshot.child("budget").getValue().toString()));
                                     if (snapshot.child("priority").getValue().toString().equals("high"))
-                                        priority.add(3);
+                                        priority.add(5);
                                     else if (snapshot.child("priority").getValue().toString().equals("medium"))
-                                        priority.add(2);
+                                        priority.add(3);
                                     else
                                         priority.add(1);
                                     break;
@@ -537,234 +749,6 @@ public class search extends AppCompatActivity {
         return radd * 10000;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main_menu2, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.sortpricemenu) {
-            custom.list.clear();
-            //countnumber=0;
-            count = new ArrayList<Integer>();
-            prioritycount = new ArrayList<Integer>();
-            totalcost = new ArrayList<Integer>();
-            name = new ArrayList<String>();
-            budget = new ArrayList<Integer>();
-            priority = new ArrayList<Integer>();
-            itemname = new ArrayList<String>();
-            itemdesc = new ArrayList<String>();
-            itemcost = new ArrayList<Integer>();
-            itemsize = new ArrayList<String>();
-            number = new ArrayList<String>();
-            itemshop = new ArrayList<String>();
-            shops = new ArrayList<String>();
-            shopname = new ArrayList<String>();
-            previtems=new ArrayList<String>();
-            countposition=0;
-            searchitems(new MyCallback() {
-                @Override
-                public void onCallback(ArrayList<String> name2, ArrayList<Integer> priority2, final ArrayList<Integer> budget2) {
-                    name = name2;
-                    budget = budget2;
-                    priority = priority2;
-                    searchitems2(new MyCallback2() {
-                        @RequiresApi(api = Build.VERSION_CODES.N)
-                        @Override
-                        public void onCallback2(ArrayList<String> name2, ArrayList<Integer> cost, ArrayList<String> desc, ArrayList<String> size, ArrayList<String> shop) {
-                            itemname = name2;
-                            itemcost = cost;
-                            itemdesc = desc;
-                            itemsize = size;
-                            itemshop = shop;
-                            shops = new ArrayList<String>(new LinkedHashSet<String>(itemshop));
-                            for (int i = 0; i < shops.size(); i++) {
-                                count.add(0);
-                                prioritycount.add(0);
-                                totalcost.add(0);
-                            }
-                            for (int i = 0; i < shops.size(); i++) {
-                                previtems=new ArrayList<String>();
-                                for (int j = 0; j < itemname.size(); j++) {
-                                    if (itemshop.get(j).equals(shops.get(i))) {
-                                        for (int m = 0; m < name.size(); m++) {
-                                            if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)&&!previtems.contains(name.get(m))) {
-                                                previtems.add(name.get(m));
-                                                totalcost.set(i, totalcost.get(i) + itemcost.get(j));
-                                                prioritycount.set(i, prioritycount.get(i) + priority.get(m));
-                                                // Toast.makeText(getApplicationContext(),priority.get(m).toString(),Toast.LENGTH_LONG).show();
-                                                count.set(i, count.get(i) + 1);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            for (int i = 0; i < shops.size(); i++) {
-                                for (int j = 0; j < shops.size() - i - 1; j++) {
-                                    if (totalcost.get(j) > totalcost.get(j + 1)) {
-                                        int tempcount = prioritycount.get(j);
-                                        prioritycount.set(j, prioritycount.get(j + 1));
-                                        prioritycount.set(j + 1, tempcount);
-                                        String tempshop = shops.get(j);
-                                        shops.set(j, shops.get(j + 1));
-                                        shops.set(j + 1, tempshop);
-                                        tempcount = count.get(j);
-                                        count.set(j, count.get(j + 1));
-                                        count.set(j + 1, tempcount);
-                                        tempcount = totalcost.get(j);
-                                        totalcost.set(j, totalcost.get(j + 1));
-                                        totalcost.set(j + 1, tempcount);
-                                    }
-                                }
-                            }
-
-                            searchitems3(new MyCallback3() {
-                                @Override
-                                public void onCallback3(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url,ArrayList<String> number) {
-                                    shopname = name;
-                                    rating = rating;
-                                    timing = timing;
-                                    url = url;
-                                    number=number;
-                                    for (int i = 0; i < shops.size(); i++) {
-
-                                        for (int j = 0; j < shopname.size(); j++) {
-                                            if (shops.get(i).equals(shopname.get(j)) && count.get(i) > 0) {
-                                                custom.list.add(new singleRow(shops.get(i), count.get(i).toString(), rating.get(j).toString(), timing.get(j), totalcost.get(i).toString(), url.get(j),number.get(i)));
-                                            }
-                                        }
-                                    }
-                                    data.setAdapter(custom);
-                                    // countnumber++;
-                                }
-                            });
-
-                        }
-                    });
-                }
-            });
-
-        } else if (item.getItemId() == R.id.sortlocationmenu) {
-
-            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            {
-//                Toast.makeText(getApplicationContext(),"hrey",Toast.LENGTH_LONG).show();
-//                if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-//                        Manifest.permission.ACCESS_FINE_LOCATION)) {
-//                    showExplanation("Permission Needed", "Rationale", Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_PERMISSION);
-//                } else {
-//                    requestPermission(Manifest.permission.ACCESS_FINE_LOCATION, REQUEST_PERMISSION);
-//                }
-
-//             else {
-//                Toast.makeText(this, "Permission (already) Granted!", Toast.LENGTH_SHORT).show();
-                 // ask single or multiple permission once
-
-
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                }
-                else
-            {
-                progressDialog = ProgressDialog.show(this,"Fetching user location","Please wait...",false,false);
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
-
-            }
-
-        }
-        else if (item.getItemId() == R.id.mapview) {
-            final ArrayList<String> shoplist=new ArrayList<String>();
-            countposition=0;
-            count = new ArrayList<Integer>();
-            prioritycount = new ArrayList<Integer>();
-            totalcost = new ArrayList<Integer>();
-            name = new ArrayList<String>();
-            budget = new ArrayList<Integer>();
-            priority = new ArrayList<Integer>();
-            itemname = new ArrayList<String>();
-            itemdesc = new ArrayList<String>();
-            itemcost = new ArrayList<Integer>();
-            itemsize = new ArrayList<String>();
-            itemshop = new ArrayList<String>();
-            shops = new ArrayList<String>();
-            number = new ArrayList<String>();
-            previtems=new ArrayList<String>();
-            shopname = new ArrayList<String>();
-            searchitems(new MyCallback() {
-                @Override
-                public void onCallback(ArrayList<String> name2, ArrayList<Integer> priority2, final ArrayList<Integer> budget2) {
-                    name = name2;
-                    budget = budget2;
-                    priority = priority2;
-                    searchitems2(new MyCallback2() {
-                        @RequiresApi(api = Build.VERSION_CODES.N)
-                        @Override
-                        public void onCallback2(ArrayList<String> name2, ArrayList<Integer> cost, ArrayList<String> desc, ArrayList<String> size, final ArrayList<String> shop) {
-                            itemname = name2;
-                            itemcost = cost;
-                            itemdesc = desc;
-                            itemsize = size;
-                            itemshop = shop;
-                            shops = new ArrayList<String>(new LinkedHashSet<String>(itemshop));
-                            for (int i = 0; i < shops.size(); i++) {
-                                count.add(0);
-                                prioritycount.add(0);
-                                totalcost.add(0);
-                            }
-                            for (int i = 0; i < shops.size(); i++) {
-                                previtems=new ArrayList<String>();
-                                for (int j = 0; j < itemname.size(); j++) {
-                                    if (itemshop.get(j).equals(shops.get(i))) {
-                                        for (int m = 0; m < name.size(); m++) {
-                                            if (name.get(m).equals(itemname.get(j)) && budget.get(m) >= itemcost.get(j)&&!previtems.contains(name.get(m))) {
-                                                previtems.add(name.get(m));
-                                                totalcost.set(i, totalcost.get(i) + itemcost.get(j));
-                                                prioritycount.set(i, prioritycount.get(i) + priority.get(m));
-                                                // Toast.makeText(getApplicationContext(),priority.get(m).toString(),Toast.LENGTH_LONG).show();
-                                                count.set(i, count.get(i) + 1);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            searchitems10(new MyCallback10() {
-                                @Override
-                                public void onCallback10(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url, ArrayList<Double> latitude2, ArrayList<Double> longitude2,ArrayList<String> number2) {
-                                    shopname = name;
-                                    for (int i = 0; i < shops.size(); i++) {
-
-                                        for (int j = 0; j < shopname.size(); j++) {
-                                            if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0) {
-                                                shoplist.add(shops.get(i));
-                                            }
-                                        }
-                                    }
-                                  //  Toast.makeText(getApplicationContext(),shoplist.get(3),Toast.LENGTH_LONG).show();
-                                      if(countnumber==1)
-                                      {
-                                          Intent intent=new Intent(getApplicationContext(),MapsActivity.class);
-                                          intent.putStringArrayListExtra("shopname",shoplist);
-                                          getApplicationContext().startActivity(intent);
-                                      }
-
-
-                                }
-                            });
-
-                        }
-                    });
-                }
-            });
-
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     }
 
