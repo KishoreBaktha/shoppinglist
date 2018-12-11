@@ -44,6 +44,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.google.android.gms:play-services-maps:16.0.0'
     implementation 'com.google.maps.android:android-maps-utils:0.4+'
+//    implementation 'com.microsoft.projectoxford:vision:1.0.374'
 }
 
 apply plugin: 'com.google.gms.google-services'

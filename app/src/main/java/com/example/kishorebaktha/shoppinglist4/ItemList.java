@@ -204,11 +204,11 @@ class customAdapter2 extends BaseAdapter {
         final TextView itemdesc = (TextView) row.findViewById(R.id.itemdesc2);
         final TextView itemsize = (TextView) row.findViewById(R.id.itemsize2);
         final singleRow2 tmp = list.get(position);
-        itemname.setText("Name: "+tmp.itemname);
-        itemcost.setText("Cost: "+tmp.itemcost);
+        itemname.setText(tmp.itemname);
+        itemcost.setText(tmp.itemcost + " SEK");
         //rating.setText(tmp.rating);
-        itemdesc.setText("Desciption: "+tmp.itemdesc);
-        itemsize.setText(" Size:"+tmp.itemsize);
+        itemdesc.setText(tmp.itemdesc);
+        itemsize.setText(" Sizes: "+tmp.itemsize);
         //Toast.makeText(view.getContext(), "UPDATE", Toast.LENGTH_SHORT).show();
         return row;
     }

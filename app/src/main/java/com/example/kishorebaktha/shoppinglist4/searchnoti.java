@@ -209,6 +209,8 @@ public class searchnoti extends AppCompatActivity {
                         break;
                     case R.id.mapview:
                         final ArrayList<String> shoplist=new ArrayList<String>();
+                        final ArrayList<String> latitudelist=new ArrayList<String>();
+                        final ArrayList<String> longitudelist=new ArrayList<String>();
                         countposition=0;
                         count = new ArrayList<Integer>();
                         prioritycount = new ArrayList<Integer>();
@@ -268,9 +270,12 @@ public class searchnoti extends AppCompatActivity {
                                                 shopname = name;
                                                 for (int i = 0; i < shops.size(); i++) {
 
-                                                    for (int j = 0; j < shopname.size(); j++) {
-                                                        if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0) {
+                                                    for (int j = 0; j < latitude.size(); j++) {
+                                                        if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0&&j<shopname.size()) {
                                                             shoplist.add(shops.get(i));
+                                                            latitudelist.add(String.valueOf(latitude.get(j)));
+                                                            longitudelist.add(String.valueOf(longitude.get(j)));
+
                                                         }
                                                     }
                                                 }
@@ -279,6 +284,8 @@ public class searchnoti extends AppCompatActivity {
                                                 {
                                                     Intent intent=new Intent(getApplicationContext(),MapsActivity.class);
                                                     intent.putStringArrayListExtra("shopname",shoplist);
+                                                    intent.putStringArrayListExtra("latitude",latitudelist);
+                                                    intent.putStringArrayListExtra("longitude",longitudelist);
                                                     getApplicationContext().startActivity(intent);
                                                 }
 

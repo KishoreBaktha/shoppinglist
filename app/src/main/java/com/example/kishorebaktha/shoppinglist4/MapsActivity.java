@@ -45,7 +45,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public static final double PI = 3.14159265;
     public static final double deg2radians = PI/180.0;
-    Marker[] markers;
+    ArrayList<Marker> markers;
     LatLng[] locations;
     double resfir;
     String[] names;
@@ -53,10 +53,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     Handler h;
     int countnumber=0;
    ArrayList<String> shoplist;
+    int size=0;
+    int index=0;
     //shoplist = i.getStringArrayListExtra("stock_list");
-    ArrayList<Double> latitude=new ArrayList<Double>();
-    ArrayList<Double>longitude=new ArrayList<Double>();
-    ArrayList<String> shopname=new ArrayList<String>();
+    ArrayList<String> latitude=new ArrayList<String>();
+    ArrayList<String>longitude=new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +102,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(result));
                 mMap.animateCamera( CameraUpdateFactory.zoomTo( 10.0f ) );
                 locationManager.removeUpdates(listener);
-                //  display(60);
+                  display(0);
             }
 
             @Override
@@ -123,15 +124,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
     @Override
     public boolean onMarkerClick(final Marker marker) {
-        //Toast.makeText(getApplicationContext(),String.valueOf(shopname.size()),Toast.LENGTH_SHORT).show();
-        for(int i=0;i<shopname.size();i++)
+       // Toast.makeText(getApplicationContext(),String.valueOf(index),Toast.LENGTH_SHORT).show();
+        for(int i=0;i<index;i++)
         {
-            if (marker.equals(markers[i]))
+            if (marker.equals(markers.get(i)))
             {
-                Toast.makeText(getApplicationContext(),"Clicked",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(),"Clicked",Toast.LENGTH_SHORT).show();
                 Intent intent=new Intent(getApplicationContext(),ItemList.class);
                 intent.putExtra("specificitem",search.specificitem);
-                intent.putExtra("name",markers[i].getTitle());
+                intent.putExtra("name",markers.get(i).getTitle());
                 startActivity(intent);
                 break;
             }
@@ -141,31 +142,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void display(final int min) {
         // markers=null;
         mMap.clear();
+        index=0;
         LatLng result=new LatLng(Latitude,Longitude);
         marker=mMap.addMarker(new MarkerOptions().position(result).title("hiiiiiiiiiii i m here"));
         marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
         mMap.setOnMarkerClickListener(this);
         // markers = new Marker[100];
         Toast.makeText(getApplicationContext(),String.valueOf(min),Toast.LENGTH_SHORT).show();
-        shopname=new ArrayList<String>();
-        latitude=new ArrayList<Double>();
-        longitude=new ArrayList<Double>();
+        //shopname=new ArrayList<String>();
+       // latitude=new ArrayList<String>();
+        //longitude=new ArrayList<String>();
         mMap.setOnMarkerClickListener(this);
-            searchitems10(new MyCallback11() {
-                @Override
-                public void onCallback11(ArrayList<String> name, ArrayList<Double> latitude2, ArrayList<Double> longitude2) {
-                    shopname = name;
-                    latitude = latitude2;
-                    longitude = longitude2;
+//            searchitems10(new MyCallback11() {
+//                @Override
+//                public void onCallback11(ArrayList<String> name, ArrayList<Double> latitude2, ArrayList<Double> longitude2) {
+//                    shopname = name;
+//                    latitude = latitude2;
+//                    longitude = longitude2;
+//                    size=shopname.size();
                     Thread t = new Thread() {
                         public void run() {
 
-                            markers = new Marker[shopname.size()];
+                            markers = new ArrayList<Marker>();
                             locations = new LatLng[latitude.size()];
-                            names = new String[shopname.size()];
+                            names = new String[shoplist.size()];
                             for (int i = 0; i < locations.length; i++) {
-                                locations[i] = new LatLng(latitude.get(i), longitude.get(i));
-                                names[i] = shopname.get(i);
+                                locations[i] = new LatLng(Double.parseDouble(latitude.get(i)), Double.parseDouble(longitude.get(i)));
+                                names[i] = shoplist.get(i);
                             }
 
                             h.post(new Runnable() {
@@ -175,9 +178,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     for (int i = 0; i < locations.length; i++) {
                                         resfir = getDistance(locations[i].latitude, locations[i].longitude, Latitude, Longitude);
                                         if (resfir <= min) {
-                                            markers[i] = mMap.addMarker(new MarkerOptions().position(locations[i]).title(names[i]));
-                                            markers[i].setIcon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(names[i])));
-
+                                            markers.add(mMap.addMarker(new MarkerOptions().position(locations[i]).title(names[i])));
+                                            markers.get(index).setIcon(BitmapDescriptorFactory.fromBitmap(iconFactory.makeIcon(names[i])));
+                                            index++;
                                             //  markers[i].showInfoWindow();
                                         }
                                     }
@@ -187,8 +190,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     };
                     t.start();
-                }
-            });
         mMap.setOnMarkerClickListener(this);
     }
     public static double getDistance(double latitude1, double longitude1, double latitude2,double longitude2)
@@ -205,31 +206,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 * Math.pow(Math.sin((lon1 - lon2) / 2), 2.0)));
         return radd*10000;
     }
-    public void searchitems10(final MyCallback11 mycallback11) {
-        FirebaseDatabase.getInstance()
-                .getReference()
-                .child("shops")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            if (shoplist.contains(snapshot.child("name").getValue().toString()))
-                            {
-                            shopname.add(snapshot.child("name").getValue().toString());
-                            latitude.add(Double.parseDouble(snapshot.child("latitude").getValue().toString()));
-                            longitude.add(Double.parseDouble(snapshot.child("longitude").getValue().toString()));
-
-                              }
-
-                        }
-                        mycallback11.onCallback11(shopname,latitude, longitude);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                    }
-                });
-    }
+//    public void searchitems10(final MyCallback11 mycallback11) {
+//        FirebaseDatabase.getInstance()
+//                .getReference()
+//                .child("shops")
+//                .addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(DataSnapshot dataSnapshot) {
+//                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                            if (shoplist.contains(snapshot.child("name").getValue().toString()))
+//                            {
+//                            shopname.add(snapshot.child("name").getValue().toString());
+//                            latitude.add(Double.parseDouble(snapshot.child("latitude").getValue().toString()));
+//                            longitude.add(Double.parseDouble(snapshot.child("longitude").getValue().toString()));
+//
+//                              }
+//
+//                        }
+//                        mycallback11.onCallback11(shopname,latitude, longitude);
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(DatabaseError databaseError) {
+//                    }
+//                });
+//    }
 
     /**
      * Manipulates the map once available.
@@ -256,8 +257,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //        else
         Intent i = getIntent();
         shoplist=i.getStringArrayListExtra("shopname");
+        latitude=i.getStringArrayListExtra("latitude");
+        longitude=i.getStringArrayListExtra("longitude");
         progressDialog = ProgressDialog.show(this,"Fetching user location","Please wait...",false,false);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
+        locationManager.requestLocationUpdates("gps", 0, 0, listener);
         mMap.setOnMarkerClickListener(this);
          Toast.makeText(getApplicationContext(),"CLICK THE MARKER TO VIEW ITEMS",Toast.LENGTH_LONG).show();
     }
@@ -270,7 +273,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 }
 
-interface MyCallback11 {
-    void onCallback11(ArrayList<String> name, ArrayList<Double> latitude, ArrayList<Double> longitude);
-}
+//interface MyCallback11 {
+//    void onCallback11(ArrayList<String> name, ArrayList<Double> latitude, ArrayList<Double> longitude);
+//}
 

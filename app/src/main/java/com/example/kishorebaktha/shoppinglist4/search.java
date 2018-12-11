@@ -220,6 +220,8 @@ public class search extends AppCompatActivity {
                         break;
                     case R.id.mapview:
                         final ArrayList<String> shoplist=new ArrayList<String>();
+                        final ArrayList<String> latitudelist=new ArrayList<String>();
+                        final ArrayList<String> longitudelist=new ArrayList<String>();
                         countposition=0;
                         count = new ArrayList<Integer>();
                         prioritycount = new ArrayList<Integer>();
@@ -234,6 +236,8 @@ public class search extends AppCompatActivity {
                         itemshop = new ArrayList<String>();
                         shops = new ArrayList<String>();
                         number = new ArrayList<String>();
+                        latitude=new ArrayList<Double>();
+                        longitude=new ArrayList<Double>();
                         previtems=new ArrayList<String>();
                         shopname = new ArrayList<String>();
                         searchitems(new MyCallback() {
@@ -277,11 +281,16 @@ public class search extends AppCompatActivity {
                                             @Override
                                             public void onCallback10(ArrayList<String> name, ArrayList<Double> rating, ArrayList<String> timing, ArrayList<String> url, ArrayList<Double> latitude2, ArrayList<Double> longitude2,ArrayList<String> number2) {
                                                 shopname = name;
+                                                latitude=latitude2;
+                                                longitude=longitude2;
                                                 for (int i = 0; i < shops.size(); i++) {
 
-                                                    for (int j = 0; j < shopname.size(); j++) {
-                                                        if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0) {
+                                                    for (int j = 0; j < latitude.size(); j++) {
+                                                        if (shops.get(i).equals(shopname.get(j))&&count.get(i)>0&&j<shopname.size()) {
                                                             shoplist.add(shops.get(i));
+                                                           latitudelist.add(String.valueOf(latitude.get(j)));
+                                                           longitudelist.add(String.valueOf(longitude.get(j)));
+
                                                         }
                                                     }
                                                 }
@@ -290,6 +299,8 @@ public class search extends AppCompatActivity {
                                                 {
                                                     Intent intent=new Intent(getApplicationContext(),MapsActivity.class);
                                                     intent.putStringArrayListExtra("shopname",shoplist);
+                                                    intent.putStringArrayListExtra("latitude",latitudelist);
+                                                   intent.putStringArrayListExtra("longitude",longitudelist);
                                                     getApplicationContext().startActivity(intent);
                                                 }
 
@@ -330,6 +341,8 @@ public class search extends AppCompatActivity {
                 itemcost = new ArrayList<Integer>();
                 itemsize = new ArrayList<String>();
                 itemshop = new ArrayList<String>();
+                latitude=new ArrayList<Double>();
+                longitude=new ArrayList<Double>();
                 shops = new ArrayList<String>();
                 previtems=new ArrayList<String>();
                 shopname = new ArrayList<String>();
@@ -827,7 +840,7 @@ class customAdapter extends BaseAdapter {
         final TextView totalcost = (TextView) row.findViewById(R.id.cost2);
         final Button viewlist=(Button)row.findViewById(R.id.viewlist);
         final Button location=(Button)row.findViewById(R.id.location);
-        final Button call=(Button)row.findViewById(R.id.call);
+        final ImageView call=(ImageView) row.findViewById(R.id.imageView2);
         final ImageView imageView=(ImageView)row.findViewById(R.id.imageView);
         final singleRow tmp = list.get(position);
         shopname.setText(tmp.shopname);

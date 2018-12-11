@@ -23,7 +23,7 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
-                                                <entry key="url" value="jar:file:/Applications/Android%20Studio.app/Contents/plugins/android/lib/android.jar!/images/material_design_icons/action/ic_add_shopping_cart_black_24dp.xml" />
+                                                <entry key="url" value="jar:file:/Applications/Android%20Studio.app/Contents/plugins/android/lib/android.jar!/images/material_design_icons/av/ic_mic_black_24dp.xml" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -33,9 +33,9 @@
                                   </option>
                                   <option name="values">
                                     <map>
-                                      <entry key="outputName" value="ic_add" />
+                                      <entry key="outputName" value="ic_mic" />
                                       <entry key="theme" value="CUSTOM" />
-                                      <entry key="themeColor" value="3345e5" />
+                                      <entry key="themeColor" value="4ca448" />
                                     </map>
                                   </option>
                                 </PersistentState>

@@ -8,37 +8,41 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="12dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
         android:text="TextView"
-        android:textSize="24sp" />
+        android:textSize="24sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/itemcost2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="48dp"
+        android:layout_alignBaseline="@+id/itemsize2"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="17dp"
         android:text="TextView"
-        android:textSize="24sp" />
+        android:textColor="#4ca448"
+        android:textSize="36sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/itemdesc2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="88dp"
+        android:layout_alignStart="@+id/itemname2"
+        android:layout_below="@+id/itemname2"
         android:text="TextView"
-        android:textSize="24sp" />
+        android:textSize="20sp" />
 
     <TextView
         android:id="@+id/itemsize2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="132dp"
+        android:layout_alignStart="@+id/itemname2"
+        android:layout_marginTop="85dp"
         android:text="TextView"
-        android:textSize="24sp" />
+        android:textSize="20sp" />
 </RelativeLayout>

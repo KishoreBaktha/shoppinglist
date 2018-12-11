@@ -4,12 +4,12 @@
     <item
         android:id="@+id/price"
         android:icon="@drawable/ic_price"
-        android:title="Price"/>
+        android:title=" Sort Price"/>
 
     <item
         android:id="@+id/location"
         android:icon="@drawable/ic_location"
-        android:title="Location"/>
+        android:title=" Sort Location"/>
 
     <item
         android:id="@+id/mapview"
